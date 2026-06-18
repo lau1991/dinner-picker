@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f6efe0" />
+  <title>今晚食乜餸啊？</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700&family=Noto+Sans+HK:wght@400;500;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="phone">
+    <!-- A. Header -->
+    <header class="header">
+      <button class="header__icon" aria-label="選單">☰</button>
+      <h1 class="header__title">今晚食乜餸啊？</h1>
+      <button class="header__fav" aria-label="我的最愛"><span>❤</span> 我的最愛</button>
+    </header>
+
+    <nav id="filters" class="filters" aria-label="篩選"></nav>
+
+    <main class="content">
+      <!-- B. Slot machine -->
+      <section class="slot" aria-label="今晚推薦">
+        <div class="slot__machine">
+          <div class="slot-reels"><div id="reels" class="reels"></div></div>
+          <button id="lever" class="lever" aria-label="拉桿開餐">
+            <span class="lever__stick"></span><span class="lever__ball"></span>
+          </button>
+        </div>
+
+        <div class="slot__controls">
+          <button id="btn-random" class="btn btn--ghost">🎲 隨機組合</button>
+          <button id="btn-serve" class="btn btn--primary">一按開餐</button>
+          <button id="btn-redraw" class="btn btn--ghost">🔄 重新抽</button>
+        </div>
+
+        <div id="structure-picker" class="structures" aria-label="餐單組合"></div>
+      </section>
+
+      <!-- C. Adult card -->
+      <section class="card card--adult">
+        <div class="card__head">
+          <div class="card__avatar card__avatar--adult">👨‍👩‍👧</div>
+          <div class="card__titles">
+            <h2 class="card__title">外母 + 我哋兩公婆</h2>
+            <p class="card__sub">份量：<span id="adult-people">3位成人</span>　|　<span id="adult-structure">組合：—</span></p>
+          </div>
+          <span class="badge badge--adult">⭐ 今日推薦</span>
+        </div>
+
+        <div id="adult-items" class="dishes"></div>
+
+        <div class="reason">
+          <span class="reason__why" id="adult-reason">—</span>
+          <span class="reason__time" id="adult-time">—</span>
+        </div>
+        <div class="tipbar"><span class="tipbar__icon">💡</span><span id="adult-tip">—</span></div>
+      </section>
+
+      <!-- D. Baby card -->
+      <section class="card card--baby">
+        <div class="card__head">
+          <div class="card__avatar card__avatar--baby">👶</div>
+          <div class="card__titles">
+            <h2 class="card__title"><span id="baby-name">可可</span>
+              <span class="age-pill"><span id="baby-age">—</span></span></h2>
+            <p class="card__sub">份量：1位幼兒　|　餐式：軟飯＋細碎餸（少鹽少油）</p>
+          </div>
+          <span class="badge badge--baby">🍼 寶寶餐</span>
+        </div>
+
+        <div class="auto-note">🔄 按生日自動更新 · 會按可可成長調整份量同食材</div>
+
+        <div id="baby-items" class="bdishes"></div>
+
+        <div id="baby-safety" class="safety-row"></div>
+
+        <div class="tipbar tipbar--baby">
+          <span class="tipbar__icon">🥄</span>
+          <span>餵食貼士：先分起可可份，再調味。魚肉拆骨，菜剪碎，少鹽少油。</span>
+        </div>
+      </section>
+    </main>
+
+    <!-- E. Bottom nav -->
+    <nav class="nav" aria-label="主導覽">
+      <button class="nav__tab nav__tab--on"><span class="nav__ico">🏠</span><span>今日推薦</span></button>
+      <button class="nav__tab"><span class="nav__ico">🍲</span><span>一煲到底</span></button>
+      <button class="nav__tab"><span class="nav__ico">💪</span><span>高蛋白</span></button>
+      <button class="nav__tab"><span class="nav__ico">🌿</span><span>清淡少油</span></button>
+      <button class="nav__tab"><span class="nav__ico">🧺</span><span>常備食材</span></button>
+    </nav>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
