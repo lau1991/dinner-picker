@@ -46,21 +46,14 @@ html, body {
 
 /* ---------------- A. Header ---------------- */
 .header {
-  display: grid;
-  grid-template-columns: 44px 1fr auto;
+  display: flex;
   align-items: center;
   gap: 6px;
-  padding: 16px 12px 8px;
-}
-.header__icon {
-  width: 44px; height: 44px;
-  border: none; border-radius: 14px;
-  background: var(--cream-2);
-  box-shadow: var(--shadow-sm);
-  font-size: 21px; color: var(--green);
-  cursor: pointer;
+  min-height: 56px;
+  padding: 18px 12px 8px;
 }
 .header__title {
+  flex: 1;
   margin: 0;
   text-align: center;
   font-family: 'Baloo 2', 'Noto Sans HK', sans-serif;
@@ -73,6 +66,7 @@ html, body {
   text-shadow: 0 1px 0 #fff;
 }
 .header__fav {
+  flex: 0 0 auto;
   border: none;
   background: var(--cream-2);
   box-shadow: var(--shadow-sm);
@@ -125,7 +119,7 @@ html, body {
 .slot__machine {
   position: relative;
   border-radius: 28px;
-  padding: 16px 56px 16px 18px;     /* right pad leaves room for lever */
+  padding: 14px 34px 14px 14px;     /* right pad leaves a slim lane for the lever */
   background:
     linear-gradient(145deg, #e9bf63, #c8902f 60%, #a9741f);
   box-shadow:
@@ -137,61 +131,58 @@ html, body {
 .slot-reels {
   border-radius: 18px;
   background: linear-gradient(180deg, #fffdf6, #f4ead2);
-  padding: 12px;
+  padding: 10px;
   box-shadow: inset 0 3px 8px rgba(120,90,30,.25);
 }
 .reels {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: 1fr;
-  gap: 10px;
+  display: grid;            /* columns set inline: repeat(N, 1fr) so all fit */
+  gap: 7px;
 }
-.reels--scroll {
-  grid-auto-columns: minmax(120px, 1fr);
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none;
-}
-.reels--scroll::-webkit-scrollbar { display: none; }
-.reels--scroll .reel { scroll-snap-align: center; }
 
 .reel {
   position: relative;
+  min-width: 0;             /* let equal tracks shrink instead of overflowing */
   background: linear-gradient(180deg, #ffffff, #fbf3e2);
   border: 1px solid #efe2c5;
-  border-radius: 14px;
-  padding: 12px 8px 10px;
+  border-radius: 13px;
+  padding: 10px 4px 9px;
   text-align: center;
-  min-height: 168px;
+  min-height: 162px;
   display: flex; flex-direction: column; align-items: center;
   overflow: hidden;
   box-shadow: inset 0 -10px 14px rgba(120,90,30,.06);
 }
 .reel__label {
-  font-size: 14px; font-weight: 700;
+  font-size: 13px; font-weight: 700;
   color: var(--ink-soft);
   border-bottom: 1px dashed var(--line);
-  padding-bottom: 6px;
+  padding-bottom: 5px;
   width: 100%;
 }
 .reel__name {
-  margin-top: 10px;
-  font-size: 21px; font-weight: 900;
-  line-height: 1.2;
+  margin-top: 8px;
+  font-size: 19px; font-weight: 900;
+  line-height: 1.18;
   color: var(--green-deep);
   flex: 1;
   display: flex; align-items: center; justify-content: center;
+  word-break: break-word;
 }
 .reel__art {
-  width: 58px; height: 58px;
-  border-radius: 14px;
+  width: 48px; height: 48px;
+  border-radius: 13px;
   display: grid; place-items: center;
-  font-size: 30px;
+  font-size: 26px;
   background:
     radial-gradient(circle at 30% 25%, #fff 0%, transparent 55%),
     hsl(var(--hue, 40) 60% 86%);
   box-shadow: var(--shadow-sm);
 }
+/* 5 columns: shrink type a touch so every reel fits without scrolling */
+.reels--dense .reel { padding: 9px 3px 8px; }
+.reels--dense .reel__label { font-size: 12px; }
+.reels--dense .reel__name { font-size: 16px; margin-top: 6px; }
+.reels--dense .reel__art { width: 40px; height: 40px; font-size: 22px; }
 /* spinning state */
 .reel--spin .reel__name { animation: blur .12s linear infinite; color: var(--gold-deep); }
 .reel--spin .reel__art { filter: blur(1px); opacity: .75; }
@@ -209,14 +200,14 @@ html, body {
 /* Lever */
 .lever {
   position: absolute;
-  top: 14px; right: 12px;
-  width: 40px; height: 64%;
+  top: 16px; right: 9px;
+  width: 22px; height: 60%;
   border: none; background: transparent;
   display: flex; flex-direction: column; align-items: center;
   cursor: pointer;
 }
 .lever__stick {
-  width: 9px; height: 100%;
+  width: 8px; height: 100%;
   border-radius: 6px;
   background: linear-gradient(90deg, #cfa54f, #8c6a26);
   box-shadow: inset 1px 0 2px rgba(255,255,255,.5);
@@ -233,9 +224,9 @@ html, body {
 
 .slot__controls {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto 1fr;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   margin: 16px 0 6px;
 }
 .btn {
@@ -456,6 +447,51 @@ html, body {
   border-radius: 999px;
   padding: 7px 13px;
   font-size: 14px; font-weight: 800;
+}
+
+/* ---------------- F. Ingredient / shopping list ---------------- */
+.card--list {
+  background: var(--cream-2);
+  border: 1px solid var(--line);
+}
+.card__avatar--list { background: #f3ecd9; }
+.badge--list { background: var(--gold-deep); color: #fff; }
+.ilist {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 14px;
+}
+.iblock {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-left: 5px solid hsl(var(--hue, 40) 55% 70%);
+  border-radius: 14px;
+  padding: 11px 12px;
+  box-shadow: var(--shadow-sm);
+}
+.iblock__head {
+  display: flex; align-items: center; gap: 7px;
+  flex-wrap: wrap;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--line);
+}
+.iblock__emoji { font-size: 19px; }
+.iblock__name { font-size: 18px; font-weight: 900; color: var(--ink); flex: 1; }
+.irows { list-style: none; margin: 8px 0 0; padding: 0; }
+.irow {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 16px;
+}
+.irow + .irow { border-top: 1px dotted #efe6d2; }
+.irow__n { color: var(--ink); font-weight: 700; }
+.irow__q { color: var(--ink-soft); font-weight: 800; white-space: nowrap; }
+.tipbar--list { background: #faf4e6; color: #7a6326; }
+
+@media (max-width: 360px) {
+  .ilist { grid-template-columns: 1fr; }
 }
 
 /* ---------------- E. Bottom nav ---------------- */

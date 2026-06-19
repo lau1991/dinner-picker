@@ -53,8 +53,9 @@ function renderFilters() {
 }
 
 function toggleFilter(id) {
-  if (state.activeFilters.has(id)) state.activeFilters.delete(id);
-  else state.activeFilters.add(id);
+  // Single-select: tapping the active chip clears it, otherwise replace.
+  if (state.activeFilters.has(id)) state.activeFilters.clear();
+  else { state.activeFilters.clear(); state.activeFilters.add(id); }
   renderFilters();
   // Light feedback: re-roll the unlocked slots under the new preference.
   generate({ animate: true });
@@ -73,8 +74,9 @@ function renderReels() {
       <div class="reel__art">${it.dish.emoji}</div>`;
     reels.appendChild(reel);
   });
-  // 4+ columns scroll horizontally; hint the user with a class.
-  reels.classList.toggle('reels--scroll', state.meal.length > 4);
+  // Always fit every column in view — one equal track per item.
+  reels.style.gridTemplateColumns = `repeat(${state.meal.length}, 1fr)`;
+  reels.classList.toggle('reels--dense', state.meal.length >= 5);
 }
 
 // ---------------- Adult card ----------------
@@ -138,6 +140,27 @@ function renderBabyCard() {
     chips.appendChild(el('span', 'safety', c)));
 }
 
+// ---------------- Ingredient / shopping list ----------------
+function renderIngredientsCard() {
+  const wrap = $('#ingredient-list');
+  wrap.innerHTML = '';
+  state.meal.forEach((it) => {
+    const block = el('div', 'iblock');
+    block.style.cssText = dishStyle(it.dish);
+    const rows = (it.dish.ingredients || [])
+      .map((ing) => `<li class="irow"><span class="irow__n">${ing.n}</span><span class="irow__q">${ing.q}</span></li>`)
+      .join('');
+    block.innerHTML = `
+      <div class="iblock__head">
+        <span class="iblock__emoji">${it.dish.emoji}</span>
+        <span class="iblock__name">${it.dish.name}</span>
+        <span class="tag tag--${it.category}">${categoryMeta[it.category].tag}</span>
+      </div>
+      <ul class="irows">${rows}</ul>`;
+    wrap.appendChild(block);
+  });
+}
+
 // ---------------- Structure picker ----------------
 function renderStructurePicker() {
   const sel = $('#structure-picker');
@@ -173,6 +196,7 @@ function generate({ animate }) {
   renderReels();
   renderAdultCard();
   renderBabyCard();
+  renderIngredientsCard();
 
   state.spinning = true;
   const reelEls = [...$('#reels').querySelectorAll('.reel')].map((r, i) => ({
@@ -211,6 +235,7 @@ function swapSlot(slotIndex) {
     .then(() => { state.spinning = false; });
   renderAdultCard();
   renderBabyCard();
+  renderIngredientsCard();
 }
 
 // ---------------- Bottom nav ----------------
@@ -228,6 +253,7 @@ function renderAll() {
   renderReels();
   renderAdultCard();
   renderBabyCard();
+  renderIngredientsCard();
 }
 
 function init() {
@@ -237,7 +263,6 @@ function init() {
 
   $('#btn-serve').addEventListener('click', () => generate({ animate: true }));
   $('#lever').addEventListener('click', () => generate({ animate: true }));
-  $('#btn-redraw').addEventListener('click', () => generate({ animate: true }));
   $('#btn-random').addEventListener('click', randomCombo);
 
   // First meal — no spin on load.

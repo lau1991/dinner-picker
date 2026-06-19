@@ -14,7 +14,6 @@
   <div class="phone">
     <!-- A. Header -->
     <header class="header">
-      <button class="header__icon" aria-label="選單">☰</button>
       <h1 class="header__title">今晚食乜餸啊？</h1>
       <button class="header__fav" aria-label="我的最愛"><span>❤</span> 我的最愛</button>
     </header>
@@ -34,7 +33,6 @@
         <div class="slot__controls">
           <button id="btn-random" class="btn btn--ghost">🎲 隨機組合</button>
           <button id="btn-serve" class="btn btn--primary">一按開餐</button>
-          <button id="btn-redraw" class="btn btn--ghost">🔄 重新抽</button>
         </div>
 
         <div id="structure-picker" class="structures" aria-label="餐單組合"></div>
@@ -81,6 +79,23 @@
         <div class="tipbar tipbar--baby">
           <span class="tipbar__icon">🥄</span>
           <span>餵食貼士：先分起可可份，再調味。魚肉拆骨，菜剪碎，少鹽少油。</span>
+        </div>
+      </section>
+
+      <!-- F. Ingredient / shopping list -->
+      <section class="card card--list">
+        <div class="card__head">
+          <div class="card__avatar card__avatar--list">🧺</div>
+          <div class="card__titles">
+            <h2 class="card__title">今晚買餸清單</h2>
+            <p class="card__sub">份量：3位成人 + 可可（可可份由成人餐分起，不另計）</p>
+          </div>
+          <span class="badge badge--list">🛒 食材</span>
+        </div>
+        <div id="ingredient-list" class="ilist"></div>
+        <div class="tipbar tipbar--list">
+          <span class="tipbar__icon">📝</span>
+          <span>份量為參考值，可按胃口同人數加減。乾貨（米、薏米等）可常備。</span>
         </div>
       </section>
     </main>
