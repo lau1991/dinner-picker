@@ -1,105 +1,15 @@
 // ============================================================
-// Mock data for 今晚食乜餸啊？ — backend-ready shapes.
-//
-// Model: 家常餸飯 (home_style_rice) is the DEFAULT mode and dominates the
-// weighted draw. The other meal types are "轉個食法" variations the user can
-// force. Slot-machine columns are derived from the chosen meal type (and, for
-// home style, from a randomly-drawn internal structure).
+// 今晚食乜餸啊？ — structured dish knowledge base + meal templates.
+// Backend-ready: replace `dishes` / the engine with an API later; shapes hold.
 // ============================================================
 
-// --- Household profile ---
 export const householdProfile = {
   adults: ['外母', '爸爸', '媽媽'],
   child: { name: '可可', birthday: '2025-01-27' },
 };
-// kept for older imports
 export const household = householdProfile;
 
-// --- Meal types ---------------------------------------------------------
-// `columns` (for non-home types) is an ordered list of { role, label } that
-// becomes the slot-machine reels. home_style_rice draws its columns from a
-// structure instead (see homeStyleStructures). babyRule drives the 可可餐.
-export const mealTypes = [
-  {
-    id: 'home_style_rice', displayName: '家常餸飯', emoji: '🍚',
-    description: '日常晚餐主流程，適合餸、菜、飯、湯', defaultWeight: 70, isDefault: true,
-    babyRule: {
-      tip: '先分起可可份，再調味。魚肉拆骨，肉剪碎，菜煮軟剪碎，少鹽少油。白飯可改軟飯。',
-      safety: ['少鹽', '已去骨', '已切碎', '先分起再調味', '可可友善'],
-      extra: [],
-    },
-  },
-  {
-    id: 'one_pot', displayName: '一煲到底', emoji: '🍲',
-    description: '雞煲、牛肉煲、豆腐魚煲、咖喱雞、番茄薯仔牛肉煲', defaultWeight: 12,
-    columns: [
-      { role: 'pot_type', label: '煲類' },
-      { role: 'pot_protein', label: '主角' },
-      { role: 'pot_side', label: '配菜' },
-      { role: 'pot_staple', label: '主食/收尾' },
-    ],
-    babyRule: {
-      tip: '落醬、落鹽、落辣前先分起。雞肉牛肉切碎，薯仔紅蘿蔔菇菌煮軟，白飯可改軟飯。濃味醬汁唔好直接俾可可。',
-      safety: ['少鹽', '先分起再調味', '已切碎', '易咀嚼', '可可友善'],
-      extra: [],
-    },
-  },
-  {
-    id: 'fried_rice_noodles', displayName: '炒飯粉麵', emoji: '🍳',
-    description: '蛋炒飯、蝦仁炒飯、炒麵、炒米、炒烏冬', defaultWeight: 7,
-    columns: [
-      { role: 'frn_base', label: '主食' },
-      { role: 'frn_protein', label: '蛋白質' },
-      { role: 'frn_veg', label: '蔬菜' },
-      { role: 'frn_extra', label: '加配/湯' },
-    ],
-    babyRule: {
-      tip: '少油少鹽，飯唔好太乾硬，粉麵剪短，蛋白質切碎，配菜切細。可用白飯拌熟料代替重油炒飯。',
-      safety: ['少油', '少鹽', '已切碎', '易咀嚼', '可可友善'],
-      extra: [],
-    },
-  },
-  {
-    id: 'rice_bowl', displayName: '碟頭飯', emoji: '🍛',
-    description: '咖喱雞飯、番茄牛肉飯、蒸肉餅飯、粟米魚柳飯', defaultWeight: 6,
-    columns: [
-      { role: 'bowl_type', label: '碟頭類型' },
-      { role: 'bowl_protein', label: '蛋白質' },
-      { role: 'bowl_sauce', label: '汁/風味' },
-      { role: 'bowl_side', label: '配菜' },
-    ],
-    babyRule: {
-      tip: '汁另上或只少量，飯煮軟，肉剪碎，配菜煮軟。咖喱、濃汁唔好直接俾太多。',
-      safety: ['少鹽', '汁另上', '已切碎', '易咀嚼', '可可友善'],
-      extra: [{ name: '軟飯', fromName: '白飯', instruction: '飯多加水煮軟，方便可可咀嚼。', emoji: '🍚', hue: 45, cautions: ['易咀嚼'] }],
-    },
-  },
-  {
-    id: 'soup_noodle_congee', displayName: '湯粉麵粥', emoji: '🍜',
-    description: '米線、烏冬、通粉、湯飯、粥', defaultWeight: 5,
-    columns: [
-      { role: 'snc_base', label: '主食' },
-      { role: 'snc_broth', label: '湯底' },
-      { role: 'snc_protein', label: '蛋白質' },
-      { role: 'snc_side', label: '配菜' },
-    ],
-    babyRule: {
-      tip: '湯底先分起再調味，粉麵剪短，粥保持軟身，肉同菜切碎。',
-      safety: ['少鹽', '先分起再調味', '已切碎', '易咀嚼', '可可友善'],
-      extra: [],
-    },
-  },
-];
-
-// --- home_style_rice internal structures -------------------------------
-export const homeStyleStructures = [
-  { id: 'simple',           label: '1餸1菜1主食',     weight: 20, slots: [{ role: 'main', label: '主餸' }, { role: 'vegetable', label: '蔬菜' }, { role: 'staple', label: '主食' }] },
-  { id: 'normal_with_soup', label: '1餸1菜1湯1主食', weight: 35, slots: [{ role: 'main', label: '主餸' }, { role: 'vegetable', label: '蔬菜' }, { role: 'soup', label: '湯' }, { role: 'staple', label: '主食' }] },
-  { id: 'two_dishes',       label: '2餸1菜1主食',     weight: 25, slots: [{ role: 'main', label: '主餸' }, { role: 'side', label: '配餸' }, { role: 'vegetable', label: '蔬菜' }, { role: 'staple', label: '主食' }] },
-  { id: 'rich_with_soup',   label: '2餸1菜1湯1主食', weight: 20, slots: [{ role: 'main', label: '主餸' }, { role: 'side', label: '配餸' }, { role: 'vegetable', label: '蔬菜' }, { role: 'soup', label: '湯' }, { role: 'staple', label: '主食' }] },
-];
-
-// --- Condition chips (multi-select) ------------------------------------
+// --- Condition chips (single-select: one or none) ----------------------
 export const conditions = [
   { id: 'quick',    label: '15分鐘',   emoji: '🕒' },
   { id: 'fridge',   label: '清雪櫃',   emoji: '🧊' },
@@ -108,260 +18,151 @@ export const conditions = [
   { id: 'low_wash', label: '少洗鑊',   emoji: '🧽' },
 ];
 
-// Meal types that benefit from 少洗鑊 / 15分鐘 (boosted under those conditions).
-export const lowEffortTypes = ['one_pot', 'fried_rice_noodles', 'rice_bowl'];
-
-// ============================================================
-// Items. Each item: id, name, kind (tag colour), emoji, hue,
-//   roles[] (which column roles it can fill), mealTypes[],
-//   tags[], cookingTime, difficulty, babyAdaptable (+ baby* fields),
-//   caution[], allergens[], optional short (for summaries) & ingredients.
-// ============================================================
-export const items = [
-  // ===================== HOME STYLE — 主餸/配餸 (mains) =====================
-  { id: 'd-steamed-fish', name: '清蒸魚', kind: 'main', emoji: '🐟', hue: 200, roles: ['main', 'side'], mealTypes: ['home_style_rice'],
-    tags: ['light', 'highprotein'], cookingTime: 15, difficulty: '易',
-    babyAdaptable: true, babyVersionName: '蒸魚碎', babyInstruction: '拆走魚骨，取魚腩肉壓碎，少許蒸魚汁拌軟飯。', babyCautions: ['已去骨', '已切碎', '少油'],
-    caution: [], allergens: ['魚'], ingredients: [{ n: '鮮魚', q: '1條(約1斤)' }, { n: '薑', q: '3片' }, { n: '蔥', q: '2條' }, { n: '蒸魚豉油', q: '2湯匙' }] },
-  { id: 'd-steam-pork', name: '梅菜蒸肉餅', kind: 'main', emoji: '🥩', hue: 18, roles: ['main', 'side'], mealTypes: ['home_style_rice'],
-    tags: ['fridge', 'highprotein'], cookingTime: 20, difficulty: '易',
-    babyAdaptable: true, babyVersionName: '蒸肉餅碎', babyInstruction: '取未沾梅菜的中心肉，壓散去多餘油，拌少量飯。', babyCautions: ['少鹽', '已切碎'],
-    caution: [], allergens: [], ingredients: [{ n: '免治豬肉', q: '300g' }, { n: '梅菜', q: '50g' }, { n: '薑蓉', q: '1茶匙' }, { n: '生粉', q: '1湯匙' }] },
-  { id: 'd-tomato-egg', name: '番茄炒蛋', kind: 'main', emoji: '🍅', hue: 8, roles: ['main', 'side'], mealTypes: ['home_style_rice'],
-    tags: ['light', 'quick', 'fridge'], cookingTime: 12, difficulty: '易',
-    babyAdaptable: true, babyVersionName: '番茄蛋碎', babyInstruction: '炒嫩一點，少鹽少油，切碎後拌軟飯。', babyCautions: ['少鹽', '已切碎', '含蛋'],
-    caution: ['蛋'], allergens: ['蛋'], ingredients: [{ n: '番茄', q: '3個' }, { n: '雞蛋', q: '4隻' }, { n: '糖', q: '1茶匙' }, { n: '蔥', q: '1條' }] },
-  { id: 'd-ginger-chicken', name: '薑蔥蒸雞', kind: 'main', emoji: '🍗', hue: 38, roles: ['main', 'side'], mealTypes: ['home_style_rice'],
-    tags: ['highprotein'], cookingTime: 25, difficulty: '中',
-    babyAdaptable: true, babyVersionName: '雞肉蓉', babyInstruction: '取雞腿肉去皮去骨，撕成幼絲再剁碎。', babyCautions: ['已去骨', '已切碎', '去皮'],
-    caution: [], allergens: [], ingredients: [{ n: '雞', q: '半隻(約600g)' }, { n: '薑', q: '5片' }, { n: '蔥', q: '3條' }] },
-  { id: 'd-shrimp-egg', name: '滑蛋蝦仁', kind: 'main', emoji: '🍤', hue: 14, roles: ['main', 'side'], mealTypes: ['home_style_rice'],
-    tags: ['quick', 'highprotein'], cookingTime: 12, difficulty: '中',
-    babyAdaptable: false, caution: ['蝦', '蛋'], allergens: ['蝦', '蛋'], ingredients: [{ n: '蝦仁', q: '200g' }, { n: '雞蛋', q: '3隻' }, { n: '蔥', q: '1條' }] },
-  { id: 'd-soy-spareribs', name: '豉汁蒸排骨', kind: 'main', emoji: '🍖', hue: 22, roles: ['main', 'side'], mealTypes: ['home_style_rice'],
-    tags: ['highprotein'], cookingTime: 30, difficulty: '中',
-    babyAdaptable: false, caution: ['骨'], allergens: ['黃豆'], ingredients: [{ n: '排骨', q: '400g' }, { n: '豆豉', q: '1湯匙' }, { n: '蒜蓉', q: '2瓣' }] },
-
-  // ===================== HOME STYLE — 蔬菜 =====================
-  { id: 'd-garlic-choisum', name: '蒜蓉炒菜心', kind: 'vegetable', emoji: '🥬', hue: 130, roles: ['vegetable'], mealTypes: ['home_style_rice'],
-    tags: ['light', 'quick', 'fridge'], cookingTime: 8, difficulty: '易',
-    babyAdaptable: true, babyVersionName: '菜心碎', babyInstruction: '取嫩葉灼軟，剪成細碎，免蒜免油。', babyCautions: ['已切碎', '少油'],
-    caution: [], allergens: [], ingredients: [{ n: '菜心', q: '1斤' }, { n: '蒜', q: '3瓣' }, { n: '油', q: '1湯匙' }] },
-  { id: 'd-poached-peashoot', name: '上湯浸豆苗', kind: 'vegetable', emoji: '🌱', hue: 120, roles: ['vegetable'], mealTypes: ['home_style_rice'],
-    tags: ['light', 'quick'], cookingTime: 8, difficulty: '易',
-    babyAdaptable: true, babyVersionName: '豆苗碎', babyInstruction: '灼軟後剪碎，用原湯（未調味）拌飯。', babyCautions: ['已切碎', '少鹽'],
-    caution: [], allergens: [], ingredients: [{ n: '豆苗', q: '1盒(約300g)' }, { n: '上湯', q: '1碗' }, { n: '蒜', q: '2瓣' }] },
-  { id: 'd-broccoli', name: '白灼西蘭花', kind: 'vegetable', emoji: '🥦', hue: 110, roles: ['vegetable'], mealTypes: ['home_style_rice'],
-    tags: ['light', 'quick'], cookingTime: 10, difficulty: '易',
-    babyAdaptable: true, babyVersionName: '西蘭花蓉', babyInstruction: '灼至軟身，只取花蕾壓成蓉。', babyCautions: ['已切碎', '少油'],
-    caution: [], allergens: [], ingredients: [{ n: '西蘭花', q: '1個' }, { n: '蒜', q: '2瓣' }] },
-  { id: 'd-stirfry-kailan', name: '蒜炒芥蘭', kind: 'vegetable', emoji: '🥗', hue: 135, roles: ['vegetable'], mealTypes: ['home_style_rice'],
-    tags: ['fridge'], cookingTime: 9, difficulty: '易',
-    babyAdaptable: false, caution: [], allergens: [], ingredients: [{ n: '芥蘭', q: '1斤' }, { n: '蒜', q: '3瓣' }] },
-
-  // ===================== HOME STYLE — 湯 =====================
-  { id: 'd-tomato-beef-soup', name: '番茄薯仔牛肉湯', kind: 'soup', emoji: '🍲', hue: 6, roles: ['soup'], mealTypes: ['home_style_rice'],
-    tags: ['fridge', 'highprotein'], cookingTime: 40, difficulty: '中',
-    babyAdaptable: true, babyVersionName: '番茄薯仔牛肉湯（先分起再調味）', babyInstruction: '未下鹽前先盛起可可份，壓爛薯仔番茄，牛肉剁碎。', babyCautions: ['少鹽', '先分起', '已切碎'],
-    caution: [], allergens: [], ingredients: [{ n: '牛展', q: '300g' }, { n: '番茄', q: '3個' }, { n: '薯仔', q: '2個' }] },
-  { id: 'd-carrot-pork-soup', name: '青紅蘿蔔煲瘦肉', kind: 'soup', emoji: '🥕', hue: 28, roles: ['soup'], mealTypes: ['home_style_rice'],
-    tags: ['light'], cookingTime: 90, difficulty: '易',
-    babyAdaptable: true, babyVersionName: '蘿蔔湯（先分起）', babyInstruction: '先盛起原味湯，蘿蔔壓蓉，瘦肉撕碎。', babyCautions: ['少鹽', '先分起'],
-    caution: [], allergens: [], ingredients: [{ n: '青蘿蔔', q: '1條' }, { n: '紅蘿蔔', q: '1條' }, { n: '瘦肉', q: '300g' }, { n: '蜜棗', q: '2粒' }] },
-  { id: 'd-wintermelon-soup', name: '冬瓜薏米湯', kind: 'soup', emoji: '🥣', hue: 90, roles: ['soup'], mealTypes: ['home_style_rice'],
-    tags: ['light'], cookingTime: 60, difficulty: '易',
-    babyAdaptable: true, babyVersionName: '冬瓜蓉湯', babyInstruction: '冬瓜煲腍，取出壓蓉，少量原湯拌勻。', babyCautions: ['少鹽', '易咀嚼'],
-    caution: [], allergens: [], ingredients: [{ n: '冬瓜', q: '1斤' }, { n: '薏米', q: '50g' }, { n: '瘦肉', q: '250g' }] },
-  { id: 'd-seaweed-egg-soup', name: '紫菜蛋花湯', kind: 'soup', emoji: '🍜', hue: 205, roles: ['soup', 'frn_extra'], mealTypes: ['home_style_rice', 'fried_rice_noodles'],
-    tags: ['light', 'quick'], cookingTime: 10, difficulty: '易',
-    babyAdaptable: false, caution: ['蛋'], allergens: ['蛋'], ingredients: [{ n: '紫菜', q: '1片' }, { n: '雞蛋', q: '2隻' }] },
-
-  // ===================== HOME STYLE — 主食 =====================
-  { id: 'd-rice', name: '白飯', kind: 'staple', emoji: '🍚', hue: 45, roles: ['staple', 'pot_staple'], mealTypes: ['home_style_rice', 'one_pot'],
-    tags: ['light', 'quick', 'fridge'], cookingTime: 15, difficulty: '易',
-    babyAdaptable: true, babyVersionName: '軟飯', babyInstruction: '多加少許水煮軟，或用原飯加湯焗軟。', babyCautions: ['易咀嚼', '少鹽'],
-    caution: [], allergens: [], ingredients: [{ n: '白米', q: '2杯' }] },
-  { id: 'd-grain-rice', name: '五穀飯', kind: 'staple', emoji: '🌾', hue: 40, roles: ['staple'], mealTypes: ['home_style_rice'],
-    tags: ['light'], cookingTime: 20, difficulty: '易',
-    babyAdaptable: true, babyVersionName: '軟五穀飯', babyInstruction: '多加水煮至軟身，確保粒粒鬆軟。', babyCautions: ['易咀嚼'],
-    caution: [], allergens: [], ingredients: [{ n: '五穀米', q: '1杯' }, { n: '白米', q: '1杯' }] },
-  { id: 'd-noodle-line', name: '麵線', kind: 'staple', emoji: '🍝', hue: 48, roles: ['staple'], mealTypes: ['home_style_rice'],
-    tags: ['quick'], cookingTime: 10, difficulty: '易',
-    babyAdaptable: true, babyVersionName: '碎麵線', babyInstruction: '灼軟後剪短，用原湯（未調味）拌勻。', babyCautions: ['已切碎', '含麩質'],
-    caution: ['麩質'], allergens: ['麩質'], ingredients: [{ n: '麵線', q: '3束' }, { n: '上湯', q: '1碗' }] },
-
-  // ===================== ONE POT — 煲類 =====================
-  { id: 'p-satay-chicken', name: '沙嗲雞煲', kind: 'pot', emoji: '🍲', hue: 24, roles: ['pot_type'], mealTypes: ['one_pot'], tags: [], cookingTime: 35, difficulty: '中', babyAdaptable: false, caution: ['辣', '花生'], allergens: ['花生'] },
-  { id: 'p-tomato-beef', name: '番茄薯仔牛肉煲', kind: 'pot', emoji: '🍅', hue: 6, roles: ['pot_type'], mealTypes: ['one_pot'], tags: ['fridge'], cookingTime: 40, difficulty: '中', babyAdaptable: false, caution: [], allergens: [] },
-  { id: 'p-tofu-fish', name: '豆腐魚頭煲', kind: 'pot', emoji: '🐟', hue: 200, roles: ['pot_type'], mealTypes: ['one_pot'], tags: [], cookingTime: 35, difficulty: '中', babyAdaptable: false, caution: ['骨'], allergens: ['魚', '黃豆'] },
-  { id: 'p-curry-chicken', name: '咖喱雞煲', kind: 'pot', emoji: '🍛', hue: 35, roles: ['pot_type'], mealTypes: ['one_pot'], tags: [], cookingTime: 40, difficulty: '中', babyAdaptable: false, caution: ['辣'], allergens: [] },
-  { id: 'p-spicy-beef', name: '麻辣牛肉煲', kind: 'pot', emoji: '🌶️', hue: 2, roles: ['pot_type'], mealTypes: ['one_pot'], tags: [], cookingTime: 40, difficulty: '中', babyAdaptable: false, caution: ['辣'], allergens: [] },
-
-  // ===================== ONE POT — 主角 (protein) =====================
-  { id: 'p-chicken', name: '雞件', kind: 'protein', emoji: '🍗', hue: 38, roles: ['pot_protein'], mealTypes: ['one_pot'], tags: ['highprotein'], cookingTime: 30, difficulty: '易',
-    babyAdaptable: true, babyVersionName: '清煮雞肉碎', babyInstruction: '落醬前先夾起，雞肉去皮去骨切碎。', babyCautions: ['已去骨', '已切碎', '先分起'],
-    caution: [], allergens: [], ingredients: [{ n: '雞', q: '半隻' }] },
-  { id: 'p-beef', name: '牛肋條', kind: 'protein', emoji: '🥩', hue: 12, roles: ['pot_protein'], mealTypes: ['one_pot'], tags: ['highprotein'], cookingTime: 50, difficulty: '中',
-    babyAdaptable: true, babyVersionName: '牛肉碎', babyInstruction: '取腍身牛肉，剁碎，未調味先分起。', babyCautions: ['已切碎', '先分起'],
-    caution: [], allergens: [], ingredients: [{ n: '牛肋條', q: '300g' }] },
-  { id: 'p-fish-chunk', name: '魚塊', kind: 'protein', emoji: '🐟', hue: 200, roles: ['pot_protein'], mealTypes: ['one_pot'], tags: ['highprotein'], cookingTime: 20, difficulty: '中',
-    babyAdaptable: true, babyVersionName: '魚肉碎（去骨）', babyInstruction: '徹底拆骨，取魚腩壓碎。', babyCautions: ['已去骨', '已切碎'],
-    caution: ['骨'], allergens: ['魚'], ingredients: [{ n: '魚塊', q: '300g' }] },
-  { id: 'p-tofu', name: '豆腐', kind: 'protein', emoji: '🧈', hue: 50, roles: ['pot_protein'], mealTypes: ['one_pot'], tags: ['light'], cookingTime: 15, difficulty: '易',
-    babyAdaptable: true, babyVersionName: '豆腐碎', babyInstruction: '取嫩豆腐壓碎，先分起未調味。', babyCautions: ['已切碎', '先分起'],
-    caution: [], allergens: ['黃豆'], ingredients: [{ n: '滑豆腐', q: '1磚' }] },
-  { id: 'p-pork-belly', name: '豬腩肉', kind: 'protein', emoji: '🥓', hue: 20, roles: ['pot_protein'], mealTypes: ['one_pot'], tags: [], cookingTime: 35, difficulty: '中',
-    babyAdaptable: false, caution: ['肥'], allergens: [], ingredients: [{ n: '豬腩肉', q: '300g' }] },
-
-  // ===================== ONE POT — 配菜 =====================
-  { id: 'p-potato-mush', name: '薯仔菇菌', kind: 'vegetable', emoji: '🥔', hue: 40, roles: ['pot_side'], mealTypes: ['one_pot'], tags: ['fridge'], cookingTime: 20, difficulty: '易',
-    babyAdaptable: true, babyVersionName: '薯仔碎', babyInstruction: '薯仔煮腍壓碎，菇菌可免。', babyCautions: ['已切碎', '易咀嚼'],
-    caution: [], allergens: [], ingredients: [{ n: '薯仔', q: '2個' }, { n: '鮮菇', q: '1包' }] },
-  { id: 'p-carrot-corn', name: '紅蘿蔔粟米', kind: 'vegetable', emoji: '🥕', hue: 28, roles: ['pot_side'], mealTypes: ['one_pot'], tags: ['light'], cookingTime: 20, difficulty: '易',
-    babyAdaptable: true, babyVersionName: '紅蘿蔔碎', babyInstruction: '紅蘿蔔煮腍壓碎；粟米粒去衣。', babyCautions: ['已切碎', '易咀嚼'],
-    caution: [], allergens: [], ingredients: [{ n: '紅蘿蔔', q: '1條' }, { n: '粟米', q: '1條' }] },
-  { id: 'p-cabbage-tofu', name: '椰菜豆卜', kind: 'vegetable', emoji: '🥬', hue: 110, roles: ['pot_side'], mealTypes: ['one_pot'], tags: ['light'], cookingTime: 15, difficulty: '易',
-    babyAdaptable: true, babyVersionName: '椰菜碎', babyInstruction: '椰菜煮軟剪碎，豆卜偏油可免。', babyCautions: ['已切碎', '少油'],
-    caution: [], allergens: ['黃豆'], ingredients: [{ n: '椰菜', q: '半個' }, { n: '豆卜', q: '6個' }] },
-  { id: 'p-babychoy-mushroom', name: '娃娃菜冬菇', kind: 'vegetable', emoji: '🍄', hue: 95, roles: ['pot_side'], mealTypes: ['one_pot'], tags: ['light'], cookingTime: 18, difficulty: '易',
-    babyAdaptable: true, babyVersionName: '娃娃菜碎', babyInstruction: '娃娃菜煮軟剪碎，冬菇可免。', babyCautions: ['已切碎'],
-    caution: [], allergens: [], ingredients: [{ n: '娃娃菜', q: '2棵' }, { n: '冬菇', q: '4朵' }] },
-
-  // ===================== ONE POT — 主食/收尾 =====================
-  { id: 'p-udon', name: '烏冬', kind: 'staple', emoji: '🍜', hue: 48, roles: ['pot_staple', 'snc_base'], mealTypes: ['one_pot', 'soup_noodle_congee'], tags: ['quick'], cookingTime: 8, difficulty: '易', short: '烏冬',
-    babyAdaptable: true, babyVersionName: '剪短烏冬', babyInstruction: '灼軟剪短，用原湯（未調味）拌勻。', babyCautions: ['已切碎', '含麩質'],
-    caution: ['麩質'], allergens: ['麩質'], ingredients: [{ n: '烏冬', q: '3個' }] },
-  { id: 'p-instant-noodle', name: '即食麵', kind: 'staple', emoji: '🍝', hue: 46, roles: ['pot_staple'], mealTypes: ['one_pot'], tags: ['quick'], cookingTime: 5, difficulty: '易',
-    babyAdaptable: false, caution: ['鈉高'], allergens: ['麩質'], ingredients: [{ n: '即食麵', q: '3個' }] },
-
-  // ===================== FRIED RICE / NOODLES — 主食 =====================
-  { id: 'f-egg-fried-rice', name: '蛋炒飯', kind: 'base', emoji: '🍳', hue: 45, roles: ['frn_base'], mealTypes: ['fried_rice_noodles'], tags: ['quick', 'fridge'], cookingTime: 12, difficulty: '易',
-    babyAdaptable: true, babyVersionName: '少油軟飯（拌蛋碎）', babyInstruction: '用白飯拌熟蛋碎，少油少鹽，唔好太乾。', babyCautions: ['少油', '少鹽', '含蛋'],
-    caution: ['蛋'], allergens: ['蛋'], ingredients: [{ n: '隔夜飯', q: '3碗' }, { n: '雞蛋', q: '3隻' }] },
-  { id: 'f-yangchow', name: '揚州炒飯', kind: 'base', emoji: '🍚', hue: 44, roles: ['frn_base'], mealTypes: ['fried_rice_noodles'], tags: ['fridge'], cookingTime: 15, difficulty: '中',
-    babyAdaptable: true, babyVersionName: '少油軟飯', babyInstruction: '白飯拌軟熟料，去蝦殼，少油少鹽。', babyCautions: ['少油', '少鹽', '已切碎'],
-    caution: [], allergens: ['蝦', '蛋'], ingredients: [{ n: '隔夜飯', q: '3碗' }, { n: '叉燒蝦仁', q: '少許' }] },
-  { id: 'f-soy-noodle', name: '豉油王炒麵', kind: 'base', emoji: '🍜', hue: 38, roles: ['frn_base'], mealTypes: ['fried_rice_noodles'], tags: ['quick'], cookingTime: 12, difficulty: '中',
-    babyAdaptable: true, babyVersionName: '剪短炒麵（少油）', babyInstruction: '麵灼軟剪短，少油少豉油。', babyCautions: ['少油', '少鹽', '已切碎', '含麩質'],
-    caution: ['麩質'], allergens: ['麩質'], ingredients: [{ n: '蛋麵', q: '3個' }, { n: '豉油', q: '2湯匙' }, { n: '芽菜', q: '1份' }] },
-  { id: 'f-singapore-mei', name: '星洲炒米', kind: 'base', emoji: '🍝', hue: 35, roles: ['frn_base'], mealTypes: ['fried_rice_noodles'], tags: [], cookingTime: 15, difficulty: '中',
-    babyAdaptable: true, babyVersionName: '剪短米粉', babyInstruction: '米粉灼軟剪短，免咖喱粉。', babyCautions: ['少油', '已切碎'],
-    caution: ['辣'], allergens: ['蝦', '蛋'], ingredients: [{ n: '米粉', q: '1包' }, { n: '咖喱粉', q: '1茶匙' }] },
-  { id: 'f-fried-udon', name: '炒烏冬', kind: 'base', emoji: '🍲', hue: 48, roles: ['frn_base'], mealTypes: ['fried_rice_noodles'], tags: ['quick'], cookingTime: 12, difficulty: '易',
-    babyAdaptable: true, babyVersionName: '剪短烏冬', babyInstruction: '烏冬灼軟剪短，少油少鹽。', babyCautions: ['少油', '已切碎', '含麩質'],
-    caution: ['麩質'], allergens: ['麩質'], ingredients: [{ n: '烏冬', q: '3個' }] },
-
-  // ===================== FRIED RICE / NOODLES — 蛋白質 =====================
-  { id: 'f-shrimp', name: '蝦仁', kind: 'protein', emoji: '🍤', hue: 14, roles: ['frn_protein'], mealTypes: ['fried_rice_noodles'], tags: ['highprotein'], cookingTime: 5, difficulty: '易', short: '蝦仁',
-    babyAdaptable: true, babyVersionName: '蝦仁碎', babyInstruction: '蝦仁去腸切碎，確認無殼。', babyCautions: ['已切碎', '含蝦'],
-    caution: ['蝦'], allergens: ['蝦'], ingredients: [{ n: '蝦仁', q: '150g' }] },
-  { id: 'f-charsiu', name: '叉燒', kind: 'protein', emoji: '🍖', hue: 4, roles: ['frn_protein'], mealTypes: ['fried_rice_noodles'], tags: ['fridge'], cookingTime: 3, difficulty: '易', short: '叉燒',
-    babyAdaptable: false, caution: ['鹹'], allergens: ['黃豆'], ingredients: [{ n: '叉燒', q: '150g' }] },
-  { id: 'f-chicken-shred', name: '雞絲', kind: 'protein', emoji: '🍗', hue: 38, roles: ['frn_protein'], mealTypes: ['fried_rice_noodles'], tags: ['highprotein'], cookingTime: 8, difficulty: '易', short: '雞絲',
-    babyAdaptable: true, babyVersionName: '雞肉碎', babyInstruction: '雞肉撕碎再剁細。', babyCautions: ['已切碎', '已去骨'],
-    caution: [], allergens: [], ingredients: [{ n: '雞柳', q: '150g' }] },
-  { id: 'f-luncheon', name: '午餐肉', kind: 'protein', emoji: '🥓', hue: 6, roles: ['frn_protein'], mealTypes: ['fried_rice_noodles'], tags: ['quick'], cookingTime: 3, difficulty: '易', short: '午餐肉',
-    babyAdaptable: false, caution: ['鈉高'], allergens: [], ingredients: [{ n: '午餐肉', q: '半罐' }] },
-  { id: 'f-soft-egg', name: '滑蛋', kind: 'protein', emoji: '🍳', hue: 45, roles: ['frn_protein'], mealTypes: ['fried_rice_noodles'], tags: ['quick'], cookingTime: 4, difficulty: '易', short: '滑蛋',
-    babyAdaptable: true, babyVersionName: '蛋碎', babyInstruction: '蛋炒嫩切碎。', babyCautions: ['已切碎', '含蛋'],
-    caution: ['蛋'], allergens: ['蛋'], ingredients: [{ n: '雞蛋', q: '3隻' }] },
-
-  // ===================== FRIED RICE / NOODLES — 蔬菜 =====================
-  { id: 'f-corn-veg', name: '粟米菜粒', kind: 'vegetable', emoji: '🌽', hue: 50, roles: ['frn_veg'], mealTypes: ['fried_rice_noodles'], tags: ['light'], cookingTime: 5, difficulty: '易',
-    babyAdaptable: true, babyVersionName: '菜粒', babyInstruction: '菜切細煮軟，粟米去衣。', babyCautions: ['已切碎'],
-    caution: [], allergens: [], ingredients: [{ n: '粟米粒', q: '1碗' }, { n: '雜菜', q: '1碗' }] },
-  { id: 'f-beansprout', name: '芽菜韭黃', kind: 'vegetable', emoji: '🌱', hue: 60, roles: ['frn_veg'], mealTypes: ['fried_rice_noodles'], tags: ['quick'], cookingTime: 4, difficulty: '易',
-    babyAdaptable: false, caution: [], allergens: [], ingredients: [{ n: '芽菜', q: '1份' }, { n: '韭黃', q: '1份' }] },
-  { id: 'f-mixed-veg', name: '雜菜粒', kind: 'vegetable', emoji: '🥕', hue: 30, roles: ['frn_veg'], mealTypes: ['fried_rice_noodles'], tags: ['light', 'fridge'], cookingTime: 5, difficulty: '易',
-    babyAdaptable: true, babyVersionName: '雜菜碎', babyInstruction: '雜菜煮軟切碎。', babyCautions: ['已切碎', '易咀嚼'],
-    caution: [], allergens: [], ingredients: [{ n: '急凍雜菜', q: '1碗' }] },
-  { id: 'f-blanch-choisum', name: '灼菜心', kind: 'vegetable', emoji: '🥬', hue: 130, roles: ['frn_veg'], mealTypes: ['fried_rice_noodles'], tags: ['light'], cookingTime: 6, difficulty: '易',
-    babyAdaptable: true, babyVersionName: '菜心碎', babyInstruction: '灼軟剪碎。', babyCautions: ['已切碎'],
-    caution: [], allergens: [], ingredients: [{ n: '菜心', q: '半斤' }] },
-
-  // ===================== FRIED RICE / NOODLES — 加配/湯 =====================
-  { id: 'f-daily-soup', name: '是日例湯', kind: 'soup', emoji: '🍲', hue: 35, roles: ['frn_extra'], mealTypes: ['fried_rice_noodles'], tags: ['light'], cookingTime: 10, difficulty: '易', babyAdaptable: false, caution: [], allergens: [] },
-  { id: 'f-blanch-lettuce', name: '灼生菜', kind: 'vegetable', emoji: '🥬', hue: 120, roles: ['frn_extra'], mealTypes: ['fried_rice_noodles'], tags: ['light', 'quick'], cookingTime: 4, difficulty: '易',
-    babyAdaptable: true, babyVersionName: '生菜碎', babyInstruction: '灼軟剪碎。', babyCautions: ['已切碎'], caution: [], allergens: [] },
-  { id: 'f-fried-egg', name: '煎蛋', kind: 'protein', emoji: '🍳', hue: 45, roles: ['frn_extra'], mealTypes: ['fried_rice_noodles'], tags: ['quick'], cookingTime: 4, difficulty: '易',
-    babyAdaptable: true, babyVersionName: '蛋碎', babyInstruction: '蛋煎熟切碎。', babyCautions: ['已切碎', '含蛋'], caution: ['蛋'], allergens: ['蛋'] },
-
-  // ===================== RICE BOWL — 碟頭類型 =====================
-  { id: 'b-curry-rice', name: '咖喱飯', kind: 'base', emoji: '🍛', hue: 35, roles: ['bowl_type'], mealTypes: ['rice_bowl'], tags: [], cookingTime: 20, difficulty: '易', babyAdaptable: false, caution: ['辣'], allergens: [] },
-  { id: 'b-tomato-rice', name: '茄汁飯', kind: 'base', emoji: '🍅', hue: 6, roles: ['bowl_type'], mealTypes: ['rice_bowl'], tags: ['fridge'], cookingTime: 18, difficulty: '易', babyAdaptable: false, caution: [], allergens: [] },
-  { id: 'b-blackpepper-rice', name: '黑椒飯', kind: 'base', emoji: '🌶️', hue: 20, roles: ['bowl_type'], mealTypes: ['rice_bowl'], tags: [], cookingTime: 18, difficulty: '易', babyAdaptable: false, caution: ['辣'], allergens: [] },
-  { id: 'b-corn-rice', name: '粟米飯', kind: 'base', emoji: '🌽', hue: 50, roles: ['bowl_type'], mealTypes: ['rice_bowl'], tags: ['light'], cookingTime: 18, difficulty: '易', babyAdaptable: false, caution: [], allergens: [] },
-
-  // ===================== RICE BOWL — 蛋白質 =====================
-  { id: 'b-chicken', name: '雞件', kind: 'protein', emoji: '🍗', hue: 38, roles: ['bowl_protein'], mealTypes: ['rice_bowl'], tags: ['highprotein'], cookingTime: 15, difficulty: '易', short: '雞',
-    babyAdaptable: true, babyVersionName: '清雞肉碎', babyInstruction: '落汁前先分起，雞肉去骨切碎。', babyCautions: ['已去骨', '已切碎', '先分起'],
-    caution: [], allergens: [], ingredients: [{ n: '雞扒', q: '2塊' }] },
-  { id: 'b-beef', name: '牛肉', kind: 'protein', emoji: '🥩', hue: 12, roles: ['bowl_protein'], mealTypes: ['rice_bowl'], tags: ['highprotein'], cookingTime: 10, difficulty: '易', short: '牛肉',
-    babyAdaptable: true, babyVersionName: '牛肉碎', babyInstruction: '牛肉煮腍切碎，先分起。', babyCautions: ['已切碎', '先分起'],
-    caution: [], allergens: [], ingredients: [{ n: '牛肉片', q: '200g' }] },
-  { id: 'b-fishfillet', name: '魚柳', kind: 'protein', emoji: '🐟', hue: 200, roles: ['bowl_protein'], mealTypes: ['rice_bowl'], tags: ['highprotein'], cookingTime: 10, difficulty: '易', short: '魚柳',
-    babyAdaptable: true, babyVersionName: '魚柳碎（去骨）', babyInstruction: '確認去骨，壓碎。', babyCautions: ['已去骨', '已切碎'],
-    caution: ['骨'], allergens: ['魚'], ingredients: [{ n: '魚柳', q: '2件' }] },
-  { id: 'b-porkpatty', name: '蒸肉餅', kind: 'protein', emoji: '🥩', hue: 18, roles: ['bowl_protein'], mealTypes: ['rice_bowl'], tags: ['fridge'], cookingTime: 18, difficulty: '易', short: '肉餅',
-    babyAdaptable: true, babyVersionName: '肉餅碎', babyInstruction: '取中心肉壓散，少鹽。', babyCautions: ['已切碎', '少鹽'],
-    caution: [], allergens: [], ingredients: [{ n: '免治豬肉', q: '250g' }] },
-
-  // ===================== RICE BOWL — 汁/風味 =====================
-  { id: 'b-jp-curry', name: '日式咖喱', kind: 'sauce', emoji: '🍛', hue: 35, roles: ['bowl_sauce'], mealTypes: ['rice_bowl'], tags: [], cookingTime: 5, difficulty: '易', short: '咖喱', babyAdaptable: false, caution: ['辣'], allergens: ['麩質'] },
-  { id: 'b-tomato-sauce', name: '茄汁', kind: 'sauce', emoji: '🍅', hue: 6, roles: ['bowl_sauce'], mealTypes: ['rice_bowl'], tags: ['fridge'], cookingTime: 5, difficulty: '易', short: '番茄', babyAdaptable: false, caution: [], allergens: [] },
-  { id: 'b-blackpepper-sauce', name: '黑椒汁', kind: 'sauce', emoji: '🌶️', hue: 20, roles: ['bowl_sauce'], mealTypes: ['rice_bowl'], tags: [], cookingTime: 5, difficulty: '易', short: '黑椒', babyAdaptable: false, caution: ['辣'], allergens: ['黃豆'] },
-  { id: 'b-corn-sauce', name: '粟米汁', kind: 'sauce', emoji: '🌽', hue: 50, roles: ['bowl_sauce'], mealTypes: ['rice_bowl'], tags: ['light'], cookingTime: 5, difficulty: '易', short: '粟米', babyAdaptable: false, caution: [], allergens: [] },
-
-  // ===================== RICE BOWL — 配菜 =====================
-  { id: 'b-broccoli', name: '灼西蘭花', kind: 'vegetable', emoji: '🥦', hue: 110, roles: ['bowl_side'], mealTypes: ['rice_bowl'], tags: ['light'], cookingTime: 6, difficulty: '易',
-    babyAdaptable: true, babyVersionName: '西蘭花蓉', babyInstruction: '灼軟取花蕾壓蓉。', babyCautions: ['已切碎'], caution: [], allergens: [], ingredients: [{ n: '西蘭花', q: '半個' }] },
-  { id: 'b-choisum', name: '灼菜心', kind: 'vegetable', emoji: '🥬', hue: 130, roles: ['bowl_side'], mealTypes: ['rice_bowl'], tags: ['light'], cookingTime: 6, difficulty: '易',
-    babyAdaptable: true, babyVersionName: '菜心碎', babyInstruction: '灼軟剪碎。', babyCautions: ['已切碎'], caution: [], allergens: [], ingredients: [{ n: '菜心', q: '半斤' }] },
-  { id: 'b-seasonal', name: '灼時菜', kind: 'vegetable', emoji: '🥗', hue: 120, roles: ['bowl_side'], mealTypes: ['rice_bowl'], tags: ['light', 'fridge'], cookingTime: 6, difficulty: '易',
-    babyAdaptable: true, babyVersionName: '時菜碎', babyInstruction: '灼軟剪碎。', babyCautions: ['已切碎'], caution: [], allergens: [], ingredients: [{ n: '時菜', q: '半斤' }] },
-
-  // ===================== SOUP / NOODLE / CONGEE — 主食 =====================
-  { id: 's-rice-noodle', name: '米線', kind: 'base', emoji: '🍜', hue: 44, roles: ['snc_base'], mealTypes: ['soup_noodle_congee'], tags: ['quick'], cookingTime: 8, difficulty: '易', short: '米線',
-    babyAdaptable: true, babyVersionName: '剪短米線', babyInstruction: '灼軟剪短，原湯未調味先分起。', babyCautions: ['已切碎', '少鹽'],
-    caution: [], allergens: [], ingredients: [{ n: '米線', q: '2個' }] },
-  { id: 's-macaroni', name: '通粉', kind: 'base', emoji: '🍝', hue: 46, roles: ['snc_base'], mealTypes: ['soup_noodle_congee'], tags: ['quick'], cookingTime: 8, difficulty: '易', short: '通粉',
-    babyAdaptable: true, babyVersionName: '剪短通粉', babyInstruction: '煮軟剪短。', babyCautions: ['已切碎', '含麩質'],
-    caution: ['麩質'], allergens: ['麩質'], ingredients: [{ n: '通粉', q: '2碗' }] },
-  { id: 's-congee', name: '白粥', kind: 'base', emoji: '🥣', hue: 45, roles: ['snc_base'], mealTypes: ['soup_noodle_congee'], tags: ['light'], cookingTime: 40, difficulty: '易', short: '粥',
-    babyAdaptable: true, babyVersionName: '軟粥', babyInstruction: '粥煮軟身，料切碎拌入。', babyCautions: ['易咀嚼', '少鹽'],
-    caution: [], allergens: [], ingredients: [{ n: '米', q: '1杯' }] },
-  { id: 's-soup-rice', name: '湯飯', kind: 'base', emoji: '🍚', hue: 42, roles: ['snc_base'], mealTypes: ['soup_noodle_congee'], tags: ['quick', 'fridge'], cookingTime: 10, difficulty: '易', short: '湯飯',
-    babyAdaptable: true, babyVersionName: '軟湯飯', babyInstruction: '飯加湯焗軟，料切碎。', babyCautions: ['易咀嚼', '少鹽'],
-    caution: [], allergens: [], ingredients: [{ n: '白飯', q: '2碗' }] },
-
-  // ===================== SOUP / NOODLE / CONGEE — 湯底 =====================
-  { id: 's-tomato-broth', name: '番茄湯', kind: 'broth', emoji: '🍅', hue: 6, roles: ['snc_broth'], mealTypes: ['soup_noodle_congee'], tags: ['light', 'fridge'], cookingTime: 15, difficulty: '易', short: '番茄', babyAdaptable: false, caution: [], allergens: [] },
-  { id: 's-superior-broth', name: '上湯', kind: 'broth', emoji: '🍲', hue: 40, roles: ['snc_broth'], mealTypes: ['soup_noodle_congee'], tags: ['light'], cookingTime: 10, difficulty: '易', short: '', babyAdaptable: false, caution: [], allergens: [] },
-  { id: 's-century-pork', name: '皮蛋瘦肉', kind: 'broth', emoji: '🥚', hue: 30, roles: ['snc_broth'], mealTypes: ['soup_noodle_congee'], tags: [], cookingTime: 20, difficulty: '易', short: '皮蛋', babyAdaptable: false, caution: ['皮蛋'], allergens: ['蛋'] },
-  { id: 's-pork-bone', name: '豬骨湯', kind: 'broth', emoji: '🍖', hue: 22, roles: ['snc_broth'], mealTypes: ['soup_noodle_congee'], tags: [], cookingTime: 25, difficulty: '易', short: '', babyAdaptable: false, caution: [], allergens: [] },
-
-  // ===================== SOUP / NOODLE / CONGEE — 蛋白質 =====================
-  { id: 's-beef', name: '牛肉', kind: 'protein', emoji: '🥩', hue: 12, roles: ['snc_protein'], mealTypes: ['soup_noodle_congee'], tags: ['highprotein'], cookingTime: 5, difficulty: '易', short: '牛肉',
-    babyAdaptable: true, babyVersionName: '牛肉碎', babyInstruction: '牛肉灼熟切碎，先分起。', babyCautions: ['已切碎', '先分起'],
-    caution: [], allergens: [], ingredients: [{ n: '牛肉片', q: '150g' }] },
-  { id: 's-chicken-shred', name: '雞絲', kind: 'protein', emoji: '🍗', hue: 38, roles: ['snc_protein'], mealTypes: ['soup_noodle_congee'], tags: ['highprotein'], cookingTime: 8, difficulty: '易', short: '雞絲',
-    babyAdaptable: true, babyVersionName: '雞肉碎', babyInstruction: '雞肉撕碎剁細。', babyCautions: ['已切碎', '已去骨'],
-    caution: [], allergens: [], ingredients: [{ n: '雞柳', q: '150g' }] },
-  { id: 's-lean-pork', name: '瘦肉', kind: 'protein', emoji: '🥩', hue: 18, roles: ['snc_protein'], mealTypes: ['soup_noodle_congee'], tags: ['highprotein'], cookingTime: 12, difficulty: '易', short: '瘦肉',
-    babyAdaptable: true, babyVersionName: '瘦肉碎', babyInstruction: '瘦肉煮腍剁碎。', babyCautions: ['已切碎'],
-    caution: [], allergens: [], ingredients: [{ n: '瘦肉', q: '150g' }] },
-  { id: 's-fish-slice', name: '魚片', kind: 'protein', emoji: '🐟', hue: 200, roles: ['snc_protein'], mealTypes: ['soup_noodle_congee'], tags: ['highprotein'], cookingTime: 5, difficulty: '中', short: '魚片',
-    babyAdaptable: true, babyVersionName: '魚片碎（去骨）', babyInstruction: '確認去骨，壓碎。', babyCautions: ['已去骨', '已切碎'],
-    caution: ['骨'], allergens: ['魚'], ingredients: [{ n: '魚片', q: '150g' }] },
-
-  // ===================== SOUP / NOODLE / CONGEE — 配菜 =====================
-  { id: 's-lettuce', name: '生菜', kind: 'vegetable', emoji: '🥬', hue: 120, roles: ['snc_side'], mealTypes: ['soup_noodle_congee'], tags: ['light', 'quick'], cookingTime: 3, difficulty: '易',
-    babyAdaptable: true, babyVersionName: '生菜碎', babyInstruction: '灼軟剪碎。', babyCautions: ['已切碎'], caution: [], allergens: [], ingredients: [{ n: '生菜', q: '1棵' }] },
-  { id: 's-choisum', name: '灼菜心', kind: 'vegetable', emoji: '🥗', hue: 130, roles: ['snc_side'], mealTypes: ['soup_noodle_congee'], tags: ['light'], cookingTime: 5, difficulty: '易',
-    babyAdaptable: true, babyVersionName: '菜心碎', babyInstruction: '灼軟剪碎。', babyCautions: ['已切碎'], caution: [], allergens: [], ingredients: [{ n: '菜心', q: '半斤' }] },
-  { id: 's-seasonal', name: '時菜', kind: 'vegetable', emoji: '🥦', hue: 110, roles: ['snc_side'], mealTypes: ['soup_noodle_congee'], tags: ['light', 'fridge'], cookingTime: 5, difficulty: '易',
-    babyAdaptable: true, babyVersionName: '時菜碎', babyInstruction: '灼軟剪碎。', babyCautions: ['已切碎'], caution: [], allergens: [], ingredients: [{ n: '時菜', q: '半斤' }] },
+// --- Meal types + templates --------------------------------------------
+// home_style_rice is a true MULTI-dish meal built from a structure.
+// The variation types are SINGLE complete dishes (one reel); their balancing
+// components live in each dish's ingredient list.
+export const mealTypes = [
+  {
+    id: 'home_style_rice', displayName: '家常餸飯', emoji: '🍚', weight: 70, isDefault: true,
+    structures: [
+      { key: 'simple', label: '1餸1菜1主食', weight: 20, slots: [{ role: 'main_dish', label: '主餸' }, { role: 'vegetable', label: '蔬菜' }, { role: 'staple', label: '主食' }] },
+      { key: 'normal_with_soup', label: '1餸1菜1湯1主食', weight: 35, slots: [{ role: 'main_dish', label: '主餸' }, { role: 'vegetable', label: '蔬菜' }, { role: 'soup', label: '湯' }, { role: 'staple', label: '主食' }] },
+      { key: 'two_dishes', label: '2餸1菜1主食', weight: 25, slots: [{ role: 'main_dish', label: '主餸' }, { role: 'second_dish', label: '配餸' }, { role: 'vegetable', label: '蔬菜' }, { role: 'staple', label: '主食' }] },
+      { key: 'rich_with_soup', label: '2餸1菜1湯1主食', weight: 20, slots: [{ role: 'main_dish', label: '主餸' }, { role: 'second_dish', label: '配餸' }, { role: 'vegetable', label: '蔬菜' }, { role: 'soup', label: '湯' }, { role: 'staple', label: '主食' }] },
+    ],
+    babyTip: '先分起可可份再調味。魚肉拆骨剪碎，肉切碎煮軟，菜煮軟剪碎，白飯可改軟飯。',
+  },
+  { id: 'one_pot', displayName: '一煲到底', emoji: '🍲', weight: 12, single: true, slots: [{ role: 'pot_base', label: '一煲到底' }], babyTip: '落醬、落鹽、落辣前先分起可可份；肉切碎、根莖菜煮腍，白飯可改軟飯。' },
+  { id: 'fried_rice_noodles', displayName: '炒飯粉麵', emoji: '🍳', weight: 7, single: true, slots: [{ role: 'frn_dish', label: '炒飯粉麵' }], babyTip: '少油少鹽，粉麵剪短，飯唔好太乾；蛋白質配菜切碎。' },
+  { id: 'rice_bowl', displayName: '碟頭飯', emoji: '🍛', weight: 6, single: true, slots: [{ role: 'rice_bowl_dish', label: '碟頭飯' }], babyTip: '汁另上或只少量，飯煮軟，肉剪碎，配菜煮軟。' },
+  { id: 'soup_noodle_congee', displayName: '湯粉麵粥', emoji: '🍜', weight: 5, single: true, slots: [{ role: 'snc_dish', label: '湯粉麵粥' }], babyTip: '湯底先分起再調味，粉麵剪短，粥保持軟身，肉同菜切碎。' },
 ];
 
-// --- Convenience lookups ---
 export const mealTypeById = Object.fromEntries(mealTypes.map((m) => [m.id, m]));
+
+// --- Default slotRoles / mealTypes per category ------------------------
+const CAT = {
+  main:             { roles: ['main_dish', 'second_dish'], types: ['home_style_rice'], kind: 'main', kindLabel: '主餸' },
+  side:             { roles: ['second_dish', 'vegetable'], types: ['home_style_rice'], kind: 'side', kindLabel: '配餸' },
+  vegetable:        { roles: ['vegetable'], types: ['home_style_rice'], kind: 'vegetable', kindLabel: '蔬菜' },
+  soup:             { roles: ['soup'], types: ['home_style_rice'], kind: 'soup', kindLabel: '湯' },
+  staple:           { roles: ['staple'], types: ['home_style_rice'], kind: 'staple', kindLabel: '主食' },
+  one_pot_base:     { roles: ['pot_base'], types: ['one_pot'], kind: 'pot', kindLabel: '一煲到底' },
+  fried_dish:       { roles: ['frn_dish'], types: ['fried_rice_noodles'], kind: 'base', kindLabel: '炒飯粉麵' },
+  rice_bowl_base:   { roles: ['rice_bowl_dish'], types: ['rice_bowl'], kind: 'staple', kindLabel: '碟頭飯' },
+  soup_noodle_dish: { roles: ['snc_dish'], types: ['soup_noodle_congee'], kind: 'soup', kindLabel: '湯粉麵粥' },
+};
+
+function makeDish(o) {
+  const c = CAT[o.category] || {};
+  const ingredients = o.ingredients || [];
+  return {
+    id: o.id, name: o.name, displayName: o.displayName || o.name, category: o.category,
+    mealTypes: o.mealTypes || c.types || [],
+    slotRoles: o.slotRoles || c.roles || [],
+    protein: o.protein || 'none',
+    vegetables: o.vegetables || [],
+    cookingMethods: o.cookingMethods || [],
+    flavourProfile: o.flavourProfile || [],
+    cuisine: o.cuisine || 'home_style',
+    timeMinutes: o.timeMinutes ?? 20,
+    difficulty: o.difficulty ?? 2,
+    oilLevel: o.oilLevel ?? 2, saltLevel: o.saltLevel ?? 2, sauceIntensity: o.sauceIntensity ?? 2,
+    babyAdaptable: o.babyAdaptable ?? false,
+    babyVersionName: o.babyVersionName || '',
+    babyInstruction: o.babyInstruction || '',
+    babyWarnings: o.babyWarnings || [],
+    babyItems: o.babyItems || null,
+    allergens: o.allergens || [],
+    ingredients, commonIngredients: ingredients.map((x) => x.n),
+    tags: o.tags || [],
+    goodWith: o.goodWith || [], avoidWith: o.avoidWith || [],
+    emoji: o.emoji || '🍽️', hue: o.hue ?? 30, kind: o.kind || c.kind || 'main',
+  };
+}
+
+// shorthand for ingredients
+const ing = (...pairs) => pairs.map(([n, q]) => ({ n, q }));
+
+export const dishes = [
+  // ============ 家常主餸 (main) ============
+  makeDish({ id: 'steamed-fish', name: '清蒸魚', category: 'main', protein: 'fish', emoji: '🐟', hue: 200, cookingMethods: ['steam'], flavourProfile: ['light', 'umami'], cuisine: 'cantonese', timeMinutes: 15, oilLevel: 1, saltLevel: 2, sauceIntensity: 1, babyAdaptable: true, babyVersionName: '蒸魚碎', babyInstruction: '拆走魚骨，取魚腩肉壓碎，少許蒸魚汁拌軟飯。', babyWarnings: ['魚骨'], allergens: ['魚'], tags: ['清淡', '可可友善'], goodWith: ['garlic-choisum', 'seaweed-egg-soup'], ingredients: ing(['鮮魚', '1條'], ['薑', '3片'], ['蔥', '2條'], ['蒸魚豉油', '2湯匙']) }),
+  makeDish({ id: 'soy-chicken', name: '豉油雞', category: 'main', protein: 'chicken', emoji: '🍗', hue: 30, cookingMethods: ['braise'], flavourProfile: ['savory', 'sweet_savory'], cuisine: 'cantonese', timeMinutes: 30, oilLevel: 2, saltLevel: 3, sauceIntensity: 3, babyAdaptable: true, babyVersionName: '雞肉碎', babyInstruction: '取雞腿肉去皮去骨，撕碎剁細，原味未沾豉油部分。', babyWarnings: ['雞骨'], tags: ['家常', '惹味'], ingredients: ing(['雞', '半隻'], ['豉油', '半碗'], ['冰糖', '1湯匙'], ['薑蔥', '少許']) }),
+  makeDish({ id: 'white-chicken', name: '白切雞', category: 'main', protein: 'chicken', emoji: '🍗', hue: 38, cookingMethods: ['boil'], flavourProfile: ['light'], cuisine: 'cantonese', timeMinutes: 35, oilLevel: 1, saltLevel: 1, sauceIntensity: 1, babyAdaptable: true, babyVersionName: '雞肉蓉', babyInstruction: '取雞胸或腿肉去皮去骨，撕成幼絲再剁碎。', babyWarnings: ['雞骨'], tags: ['清淡', '可可友善'], ingredients: ing(['雞', '半隻'], ['薑蔥', '少許'], ['鹽', '少許']) }),
+  makeDish({ id: 'steam-pork-patty', name: '蒸肉餅', category: 'main', protein: 'pork', emoji: '🥩', hue: 18, cookingMethods: ['steam'], flavourProfile: ['homey', 'savory'], cuisine: 'cantonese', timeMinutes: 20, oilLevel: 2, saltLevel: 3, babyAdaptable: true, babyVersionName: '肉餅碎', babyInstruction: '取中心肉壓散，去多餘油，拌少量軟飯。', tags: ['家常', '清雪櫃'], ingredients: ing(['免治豬肉', '300g'], ['馬蹄', '3粒'], ['薑蓉', '1茶匙'], ['生粉', '1湯匙']) }),
+  makeDish({ id: 'tomato-egg', name: '番茄炒蛋', category: 'main', protein: 'egg', emoji: '🍅', hue: 8, cookingMethods: ['stir_fry'], flavourProfile: ['homey', 'tomato'], cuisine: 'home_style', timeMinutes: 12, oilLevel: 2, saltLevel: 2, babyAdaptable: true, babyVersionName: '番茄蛋碎', babyInstruction: '炒嫩一點，少鹽少油，切碎後拌軟飯。', babyWarnings: ['蛋'], allergens: ['蛋'], tags: ['快手', '可可友善', '清雪櫃', '家常'], ingredients: ing(['番茄', '3個'], ['雞蛋', '4隻'], ['糖', '1茶匙'], ['蔥', '1條']) }),
+  makeDish({ id: 'corn-pork', name: '粟米肉粒', category: 'main', protein: 'pork', emoji: '🌽', hue: 48, cookingMethods: ['stir_fry'], flavourProfile: ['sweet_savory', 'homey'], cuisine: 'home_style', timeMinutes: 15, oilLevel: 2, saltLevel: 2, babyAdaptable: true, babyVersionName: '粟米肉碎', babyInstruction: '肉粒切碎、粟米去衣壓碎，少汁。', tags: ['家常', '快手'], ingredients: ing(['免治豬肉', '200g'], ['粟米粒', '1碗'], ['甘筍粒', '少許'], ['生粉', '1茶匙']) }),
+  makeDish({ id: 'tofu-egg-steam', name: '豆腐蒸蛋', category: 'main', protein: 'egg', emoji: '🍮', hue: 50, cookingMethods: ['steam'], flavourProfile: ['light'], cuisine: 'cantonese', timeMinutes: 15, oilLevel: 1, saltLevel: 1, babyAdaptable: true, babyVersionName: '蒸蛋豆腐', babyInstruction: '蒸滑蛋拌嫩豆腐，少鹽，質地軟身啱可可。', babyWarnings: ['蛋'], allergens: ['蛋', '黃豆'], tags: ['清淡', '可可友善'], ingredients: ing(['滑豆腐', '1磚'], ['雞蛋', '3隻'], ['蔥花', '少許']) }),
+  makeDish({ id: 'onion-pork-chop', name: '洋蔥豬扒', category: 'main', protein: 'pork', emoji: '🧅', hue: 28, cookingMethods: ['pan_fry'], flavourProfile: ['savory'], cuisine: 'cantonese', timeMinutes: 20, oilLevel: 3, saltLevel: 3, sauceIntensity: 3, babyAdaptable: true, babyVersionName: '豬扒碎', babyInstruction: '取瘦身部分剁碎，免汁，洋蔥煮腍剪碎。', tags: ['家常', '惹味'], ingredients: ing(['豬扒', '2塊'], ['洋蔥', '1個'], ['茄汁', '1湯匙'], ['生抽', '1湯匙']) }),
+  makeDish({ id: 'potato-chicken-wing', name: '薯仔炆雞翼', category: 'main', protein: 'chicken', emoji: '🍗', hue: 32, cookingMethods: ['braise'], flavourProfile: ['savory', 'homey'], cuisine: 'home_style', timeMinutes: 35, oilLevel: 3, saltLevel: 3, sauceIntensity: 3, babyAdaptable: true, babyVersionName: '雞肉薯仔碎', babyInstruction: '雞翼去骨取肉切碎，薯仔煮腍壓碎，先分起未收汁部分。', babyWarnings: ['雞骨'], tags: ['家常'], ingredients: ing(['雞中翼', '8隻'], ['薯仔', '2個'], ['生抽老抽', '適量'], ['薑蔥', '少許']) }),
+  makeDish({ id: 'tomato-potato-beef', name: '番茄薯仔炆牛肉', category: 'main', protein: 'beef', emoji: '🍅', hue: 6, cookingMethods: ['braise'], flavourProfile: ['tomato', 'savory'], cuisine: 'home_style', timeMinutes: 45, oilLevel: 2, saltLevel: 2, babyAdaptable: true, babyVersionName: '番茄薯仔牛肉碎', babyInstruction: '牛肉炆腍剁碎，番茄薯仔壓蓉，先分起再調味。', tags: ['家常', '清雪櫃'], ingredients: ing(['牛肋條', '300g'], ['番茄', '3個'], ['薯仔', '2個'], ['洋蔥', '1個']) }),
+  makeDish({ id: 'fish-fragrant-eggplant', name: '魚香茄子', category: 'main', protein: 'pork', emoji: '🍆', hue: 280, cookingMethods: ['stir_fry', 'braise'], flavourProfile: ['savory', 'spicy', 'rich'], cuisine: 'chinese', timeMinutes: 20, oilLevel: 4, saltLevel: 3, sauceIntensity: 4, babyAdaptable: false, babyWarnings: ['辣', '重味'], tags: ['惹味'], ingredients: ing(['茄子', '2條'], ['免治豬肉', '100g'], ['蒜蓉豆瓣醬', '1湯匙'], ['糖醋', '適量']) }),
+  makeDish({ id: 'shrimp-egg', name: '蝦仁炒蛋', category: 'main', protein: 'shrimp', emoji: '🍤', hue: 14, cookingMethods: ['stir_fry'], flavourProfile: ['light'], cuisine: 'cantonese', timeMinutes: 12, oilLevel: 2, saltLevel: 2, babyAdaptable: true, babyVersionName: '蝦仁蛋碎', babyInstruction: '蝦仁去腸去殼切碎，蛋炒嫩切碎。', babyWarnings: ['蝦', '蛋'], allergens: ['蝦', '蛋'], tags: ['快手', '清淡'], ingredients: ing(['蝦仁', '200g'], ['雞蛋', '3隻'], ['蔥', '1條']) }),
+  makeDish({ id: 'stuffed-tofu', name: '煎釀豆腐', category: 'main', protein: 'pork', emoji: '🧈', hue: 46, cookingMethods: ['pan_fry'], flavourProfile: ['savory', 'homey'], cuisine: 'cantonese', timeMinutes: 25, oilLevel: 3, saltLevel: 3, babyAdaptable: true, babyVersionName: '豆腐肉碎', babyInstruction: '取豆腐同肉餡壓碎，免煎香面層，少油。', allergens: ['黃豆'], tags: ['家常'], ingredients: ing(['板豆腐', '1磚'], ['免治豬肉', '150g'], ['豉汁', '少許']) }),
+  makeDish({ id: 'mushroom-chicken', name: '冬菇蒸雞', category: 'main', protein: 'chicken', emoji: '🍄', hue: 35, cookingMethods: ['steam'], flavourProfile: ['umami', 'savory'], cuisine: 'cantonese', timeMinutes: 30, oilLevel: 2, saltLevel: 3, babyAdaptable: true, babyVersionName: '雞肉冬菇碎', babyInstruction: '雞肉去骨切碎，冬菇切細煮軟，少鹽。', babyWarnings: ['雞骨'], tags: ['家常'], ingredients: ing(['雞', '半隻'], ['冬菇', '5朵'], ['薑蔥', '少許'], ['生抽', '1湯匙']) }),
+  makeDish({ id: 'mui-choy-pork', name: '梅菜扣肉', category: 'main', protein: 'pork', emoji: '🥓', hue: 20, cookingMethods: ['braise', 'steam'], flavourProfile: ['rich', 'savory'], cuisine: 'chinese', timeMinutes: 60, oilLevel: 5, saltLevel: 4, sauceIntensity: 4, babyAdaptable: false, babyWarnings: ['太肥', '太鹹'], tags: ['惹味'], ingredients: ing(['五花腩', '400g'], ['梅菜', '100g'], ['冰糖', '1湯匙']) }),
+  makeDish({ id: 'winter-melon-vermicelli', name: '節瓜粉絲蝦米', category: 'main', protein: 'shrimp', emoji: '🥒', hue: 90, cookingMethods: ['braise'], flavourProfile: ['light', 'umami', 'homey'], cuisine: 'cantonese', timeMinutes: 20, oilLevel: 2, saltLevel: 2, babyAdaptable: true, babyVersionName: '節瓜粉絲碎', babyInstruction: '節瓜煮腍剪碎，粉絲剪短，蝦米可免。', babyWarnings: ['蝦'], allergens: ['蝦'], tags: ['清淡', '家常'], ingredients: ing(['節瓜', '2個'], ['粉絲', '1紮'], ['蝦米', '1湯匙']) }),
+
+  // ============ 蔬菜 (vegetable) ============
+  makeDish({ id: 'garlic-choisum', name: '蒜蓉炒菜心', category: 'vegetable', vegetables: ['菜心'], emoji: '🥬', hue: 130, cookingMethods: ['stir_fry'], flavourProfile: ['light'], timeMinutes: 8, oilLevel: 2, saltLevel: 2, babyAdaptable: true, babyVersionName: '菜心碎', babyInstruction: '取嫩葉灼軟剪碎，免蒜免油。', tags: ['清淡', '快手', '清雪櫃'], ingredients: ing(['菜心', '1斤'], ['蒜', '3瓣']) }),
+  makeDish({ id: 'broccoli', name: '灼西蘭花', category: 'vegetable', vegetables: ['西蘭花'], emoji: '🥦', hue: 110, cookingMethods: ['boil'], flavourProfile: ['light'], timeMinutes: 8, oilLevel: 1, saltLevel: 1, babyAdaptable: true, babyVersionName: '西蘭花蓉', babyInstruction: '灼至軟身，取花蕾壓蓉。', tags: ['清淡', '少油', '可可友善'], ingredients: ing(['西蘭花', '1個'], ['蒜', '2瓣']) }),
+  makeDish({ id: 'spinach', name: '上湯菠菜', category: 'vegetable', vegetables: ['菠菜'], emoji: '🍃', hue: 125, cookingMethods: ['boil'], flavourProfile: ['light'], timeMinutes: 8, oilLevel: 1, saltLevel: 2, babyAdaptable: true, babyVersionName: '菠菜碎', babyInstruction: '灼軟剪幼碎。', tags: ['清淡', '快手'], ingredients: ing(['菠菜', '1斤'], ['上湯', '1碗']) }),
+  makeDish({ id: 'pakchoi', name: '蒜蓉白菜仔', category: 'vegetable', vegetables: ['白菜仔'], emoji: '🥬', hue: 120, cookingMethods: ['stir_fry'], flavourProfile: ['light'], timeMinutes: 8, oilLevel: 2, saltLevel: 2, babyAdaptable: true, babyVersionName: '白菜碎', babyInstruction: '灼軟剪碎。', tags: ['清淡', '快手', '清雪櫃'], ingredients: ing(['白菜仔', '1斤'], ['蒜', '2瓣']) }),
+  makeDish({ id: 'baby-bokchoy', name: '清炒娃娃菜', category: 'vegetable', vegetables: ['娃娃菜'], emoji: '🥬', hue: 115, cookingMethods: ['stir_fry'], flavourProfile: ['light'], timeMinutes: 8, oilLevel: 2, saltLevel: 2, babyAdaptable: true, babyVersionName: '娃娃菜碎', babyInstruction: '煮軟剪碎。', tags: ['清淡', '快手'], ingredients: ing(['娃娃菜', '2棵'], ['蒜', '1瓣']) }),
+  makeDish({ id: 'fuzzy-melon', name: '上湯節瓜', category: 'vegetable', vegetables: ['節瓜'], emoji: '🥒', hue: 95, cookingMethods: ['boil'], flavourProfile: ['light'], timeMinutes: 12, oilLevel: 1, saltLevel: 1, babyAdaptable: true, babyVersionName: '節瓜蓉', babyInstruction: '煮腍壓蓉。', tags: ['清淡', '可可友善'], ingredients: ing(['節瓜', '2個'], ['上湯', '1碗']) }),
+  makeDish({ id: 'pumpkin', name: '蒸南瓜', category: 'vegetable', vegetables: ['南瓜'], emoji: '🎃', hue: 35, cookingMethods: ['steam'], flavourProfile: ['light', 'sweet_savory'], timeMinutes: 15, oilLevel: 1, saltLevel: 1, babyAdaptable: true, babyVersionName: '南瓜蓉', babyInstruction: '蒸腍壓蓉，天然甜味啱可可。', tags: ['清淡', '可可友善', '少油'], ingredients: ing(['南瓜', '半個']) }),
+  makeDish({ id: 'carrot-corn-stir', name: '炒紅蘿蔔粟米', category: 'vegetable', vegetables: ['紅蘿蔔', '粟米'], emoji: '🥕', hue: 28, cookingMethods: ['stir_fry'], flavourProfile: ['light', 'sweet_savory'], timeMinutes: 10, oilLevel: 2, saltLevel: 2, babyAdaptable: true, babyVersionName: '紅蘿蔔粟米碎', babyInstruction: '煮腍切碎，粟米去衣。', tags: ['清淡', '可可友善', '清雪櫃'], ingredients: ing(['紅蘿蔔', '1條'], ['粟米', '1條']) }),
+  makeDish({ id: 'stewed-tomato', name: '茄汁煮番茄', category: 'vegetable', vegetables: ['番茄'], emoji: '🍅', hue: 6, cookingMethods: ['boil'], flavourProfile: ['light', 'tomato'], timeMinutes: 10, oilLevel: 1, saltLevel: 2, babyAdaptable: true, babyVersionName: '番茄蓉', babyInstruction: '去皮煮腍壓蓉。', tags: ['清淡', '清雪櫃'], ingredients: ing(['番茄', '4個'], ['糖', '少許']) }),
+  makeDish({ id: 'lettuce', name: '蠔油生菜', category: 'vegetable', vegetables: ['生菜'], emoji: '🥬', hue: 118, cookingMethods: ['boil'], flavourProfile: ['light'], timeMinutes: 5, oilLevel: 1, saltLevel: 2, babyAdaptable: true, babyVersionName: '生菜碎', babyInstruction: '灼軟剪碎，免蠔油。', tags: ['清淡', '快手'], ingredients: ing(['生菜', '1棵'], ['蠔油', '1湯匙']) }),
+
+  // ============ 湯 (soup) ============
+  makeDish({ id: 'seaweed-egg-soup', name: '紫菜蛋花湯', category: 'soup', protein: 'egg', emoji: '🍲', hue: 205, cookingMethods: ['soup'], flavourProfile: ['light'], timeMinutes: 10, oilLevel: 1, saltLevel: 2, babyAdaptable: true, babyVersionName: '蛋花碎（先分起）', babyInstruction: '滾湯後先盛起可可份，蛋花切碎，少鹽。', babyWarnings: ['蛋'], allergens: ['蛋'], tags: ['清淡', '快手', '有湯'], ingredients: ing(['紫菜', '1片'], ['雞蛋', '2隻']) }),
+  makeDish({ id: 'tomato-egg-soup', name: '番茄蛋花湯', category: 'soup', protein: 'egg', emoji: '🍅', hue: 8, cookingMethods: ['soup'], flavourProfile: ['light', 'tomato'], timeMinutes: 12, oilLevel: 1, saltLevel: 2, babyAdaptable: true, babyVersionName: '番茄蛋蓉（先分起）', babyInstruction: '先分起原味湯，番茄壓蓉、蛋花切碎。', babyWarnings: ['蛋'], allergens: ['蛋'], tags: ['清淡', '有湯', '清雪櫃'], ingredients: ing(['番茄', '2個'], ['雞蛋', '2隻']) }),
+  makeDish({ id: 'wintermelon-ribs-soup', name: '冬瓜排骨湯', category: 'soup', protein: 'pork', emoji: '🥣', hue: 90, cookingMethods: ['soup'], flavourProfile: ['light'], timeMinutes: 90, oilLevel: 2, saltLevel: 2, babyAdaptable: true, babyVersionName: '冬瓜蓉湯（先分起）', babyInstruction: '先盛起原味湯，冬瓜壓蓉，瘦肉撕碎。', tags: ['清淡', '有湯'], ingredients: ing(['冬瓜', '1斤'], ['排骨', '300g']) }),
+  makeDish({ id: 'corn-carrot-soup', name: '粟米紅蘿蔔湯', category: 'soup', protein: 'pork', emoji: '🌽', hue: 30, cookingMethods: ['soup'], flavourProfile: ['light', 'sweet_savory'], timeMinutes: 90, oilLevel: 1, saltLevel: 2, babyAdaptable: true, babyVersionName: '粟米紅蘿蔔蓉湯（先分起）', babyInstruction: '先分起原味湯，粟米去衣、紅蘿蔔壓蓉。', tags: ['清淡', '有湯', '可可友善'], ingredients: ing(['粟米', '2條'], ['紅蘿蔔', '2條'], ['瘦肉', '300g']) }),
+  makeDish({ id: 'tomato-potato-beef-soup', name: '番茄薯仔牛肉湯', category: 'soup', protein: 'beef', emoji: '🍲', hue: 6, cookingMethods: ['soup'], flavourProfile: ['tomato', 'savory'], timeMinutes: 60, oilLevel: 2, saltLevel: 2, babyAdaptable: true, babyVersionName: '番茄薯仔牛肉蓉（先分起）', babyInstruction: '未下鹽前先盛起可可份，薯仔番茄壓蓉，牛肉剁碎。', tags: ['有湯', '清雪櫃'], ingredients: ing(['牛展', '300g'], ['番茄', '3個'], ['薯仔', '2個']) }),
+  makeDish({ id: 'fuzzymelon-pork-soup', name: '節瓜瘦肉湯', category: 'soup', protein: 'pork', emoji: '🥒', hue: 92, cookingMethods: ['soup'], flavourProfile: ['light'], timeMinutes: 60, oilLevel: 1, saltLevel: 2, babyAdaptable: true, babyVersionName: '節瓜瘦肉蓉（先分起）', babyInstruction: '先分起原味湯，節瓜壓蓉，瘦肉撕碎。', tags: ['清淡', '有湯'], ingredients: ing(['節瓜', '2個'], ['瘦肉', '300g']) }),
+  makeDish({ id: 'tofu-fish-soup', name: '豆腐魚湯', category: 'soup', protein: 'fish', emoji: '🐟', hue: 200, cookingMethods: ['soup'], flavourProfile: ['light', 'umami'], timeMinutes: 40, oilLevel: 2, saltLevel: 2, babyAdaptable: true, babyVersionName: '豆腐魚蓉（去骨先分起）', babyInstruction: '先分起原味湯，魚肉徹底拆骨壓碎，豆腐壓蓉。', babyWarnings: ['魚骨'], allergens: ['魚', '黃豆'], tags: ['清淡', '有湯'], ingredients: ing(['魚', '1條'], ['豆腐', '1磚'], ['薑', '3片']) }),
+
+  // ============ 主食 (staple) ============
+  makeDish({ id: 'white-rice', name: '白飯', category: 'staple', emoji: '🍚', hue: 45, cookingMethods: ['rice_cooker'], flavourProfile: ['light'], timeMinutes: 15, oilLevel: 1, saltLevel: 1, babyAdaptable: true, babyVersionName: '軟飯', babyInstruction: '多加水煮軟，或原飯加湯焗軟。', tags: ['清淡', '配飯', '可可友善'], ingredients: ing(['白米', '2杯']) }),
+  makeDish({ id: 'brown-rice', name: '糙米飯', category: 'staple', emoji: '🌾', hue: 40, cookingMethods: ['rice_cooker'], flavourProfile: ['light'], timeMinutes: 25, oilLevel: 1, saltLevel: 1, babyAdaptable: true, babyVersionName: '軟糙米飯', babyInstruction: '多加水煮至粒粒鬆軟。', tags: ['清淡', '配飯'], ingredients: ing(['糙米', '1杯'], ['白米', '1杯']) }),
+  makeDish({ id: 'congee-plain', name: '白粥', category: 'staple', emoji: '🥣', hue: 44, cookingMethods: ['boil'], flavourProfile: ['light'], timeMinutes: 40, oilLevel: 1, saltLevel: 1, babyAdaptable: true, babyVersionName: '軟粥', babyInstruction: '煮軟身，可拌入碎料。', tags: ['清淡', '可可友善'], ingredients: ing(['米', '1杯']) }),
+  makeDish({ id: 'noodle-line', name: '麵線', category: 'staple', emoji: '🍜', hue: 48, cookingMethods: ['boil'], flavourProfile: ['light'], timeMinutes: 10, oilLevel: 1, saltLevel: 2, babyAdaptable: true, babyVersionName: '碎麵線', babyInstruction: '灼軟剪短，用原湯（未調味）拌勻。', allergens: ['麩質'], tags: ['快手', '配飯'], ingredients: ing(['麵線', '3束'], ['上湯', '1碗']) }),
+
+  // ============ 一煲到底 (one_pot_base, single complete dish 配白飯) ============
+  makeDish({ id: 'pot-satay-chicken', name: '沙嗲雞煲', displayName: '沙嗲雞煲（配白飯）', category: 'one_pot_base', protein: 'chicken', emoji: '🍲', hue: 24, cookingMethods: ['one_pot', 'braise'], flavourProfile: ['spicy', 'rich', 'savory'], timeMinutes: 35, oilLevel: 4, saltLevel: 3, sauceIntensity: 4, allergens: ['花生'], babyWarnings: ['辣', '花生'], tags: ['惹味', '少洗鑊'], babyItems: [{ name: '軟飯', cautions: ['易咀嚼'] }, { name: '清雞肉碎', instruction: '落沙嗲前先夾起雞件，去皮去骨切碎。', cautions: ['已去骨', '已切碎', '先分起'] }, { name: '薯仔碎', instruction: '薯仔煮腍壓碎，免沙嗲醬。', cautions: ['已切碎'] }], ingredients: ing(['雞件', '半隻'], ['薯仔', '2個'], ['洋蔥', '1個'], ['沙嗲醬', '3湯匙'], ['椰漿', '半杯'], ['白飯', '3碗']) }),
+  makeDish({ id: 'pot-tomato-beef', name: '番茄薯仔牛肉煲', displayName: '番茄薯仔牛肉煲（配白飯）', category: 'one_pot_base', protein: 'beef', emoji: '🍅', hue: 6, cookingMethods: ['one_pot', 'braise'], flavourProfile: ['tomato', 'savory'], timeMinutes: 45, oilLevel: 2, saltLevel: 2, tags: ['少洗鑊', '清雪櫃', '家常'], babyItems: [{ name: '軟飯', cautions: ['易咀嚼'] }, { name: '牛肉碎', instruction: '未下鹽前先分起，牛肉剁碎。', cautions: ['已切碎', '先分起'] }, { name: '番茄薯仔蓉', instruction: '番茄薯仔煮腍壓蓉。', cautions: ['已切碎'] }], ingredients: ing(['牛肋條', '300g'], ['番茄', '3個'], ['薯仔', '2個'], ['洋蔥', '1個'], ['白飯', '3碗']) }),
+  makeDish({ id: 'pot-tofu-fish', name: '豆腐魚煲', displayName: '豆腐魚煲（配白飯）', category: 'one_pot_base', protein: 'fish', emoji: '🐟', hue: 200, cookingMethods: ['one_pot', 'braise'], flavourProfile: ['umami', 'savory'], timeMinutes: 35, oilLevel: 3, saltLevel: 3, babyWarnings: ['魚骨'], allergens: ['魚', '黃豆'], tags: ['少洗鑊'], babyItems: [{ name: '軟飯', cautions: ['易咀嚼'] }, { name: '魚肉碎', instruction: '徹底拆骨，取魚腩壓碎。', cautions: ['已去骨', '已切碎'] }, { name: '豆腐碎', instruction: '取嫩豆腐壓碎，先分起。', cautions: ['已切碎', '先分起'] }], ingredients: ing(['魚', '1條'], ['板豆腐', '2磚'], ['娃娃菜', '2棵'], ['薑蔥', '少許'], ['白飯', '3碗']) }),
+  makeDish({ id: 'pot-curry-chicken', name: '咖喱雞煲', displayName: '咖喱雞煲（配白飯）', category: 'one_pot_base', protein: 'chicken', emoji: '🍛', hue: 35, cookingMethods: ['one_pot', 'braise'], flavourProfile: ['curry', 'rich'], timeMinutes: 40, oilLevel: 3, saltLevel: 3, sauceIntensity: 4, babyWarnings: ['辣'], tags: ['惹味', '少洗鑊'], babyItems: [{ name: '軟飯', cautions: ['易咀嚼'] }, { name: '清雞肉碎', instruction: '咖喱另上，雞肉去骨切碎。', cautions: ['已去骨', '已切碎', '先分起'] }, { name: '薯仔紅蘿蔔碎', instruction: '薯仔紅蘿蔔煮腍壓碎。', cautions: ['已切碎'] }], ingredients: ing(['雞件', '半隻'], ['薯仔', '2個'], ['紅蘿蔔', '1條'], ['洋蔥', '1個'], ['咖喱磚', '半盒'], ['白飯', '3碗']) }),
+  makeDish({ id: 'pot-wintermelon-ham-chicken', name: '冬瓜火腿雞湯飯', displayName: '冬瓜火腿雞湯飯', category: 'one_pot_base', protein: 'chicken', emoji: '🍲', hue: 90, cookingMethods: ['one_pot', 'soup'], flavourProfile: ['light', 'umami'], timeMinutes: 40, oilLevel: 2, saltLevel: 2, tags: ['清淡', '有湯', '少洗鑊'], babyItems: [{ name: '軟湯飯', instruction: '原味湯飯焗軟，少鹽。', cautions: ['易咀嚼', '少鹽'] }, { name: '雞肉碎', instruction: '雞肉去骨撕碎，火腿可免（偏鹹）。', cautions: ['已去骨', '已切碎', '先分起'] }, { name: '冬瓜蓉', instruction: '冬瓜煮腍壓蓉。', cautions: ['已切碎'] }], ingredients: ing(['雞件', '半隻'], ['冬瓜', '1斤'], ['火腿', '少許'], ['白飯', '3碗']) }),
+  makeDish({ id: 'pot-potato-chicken', name: '薯仔炆雞煲', displayName: '薯仔炆雞煲（配白飯）', category: 'one_pot_base', protein: 'chicken', emoji: '🥔', hue: 32, cookingMethods: ['one_pot', 'braise'], flavourProfile: ['savory', 'homey'], timeMinutes: 40, oilLevel: 3, saltLevel: 3, tags: ['家常', '少洗鑊', '清雪櫃'], babyItems: [{ name: '軟飯', cautions: ['易咀嚼'] }, { name: '雞肉碎', instruction: '雞肉去骨切碎，先分起未收汁部分。', cautions: ['已去骨', '已切碎', '先分起'] }, { name: '薯仔碎', instruction: '薯仔煮腍壓碎。', cautions: ['已切碎'] }], ingredients: ing(['雞件', '半隻'], ['薯仔', '2個'], ['冬菇', '4朵'], ['生抽老抽', '適量'], ['白飯', '3碗']) }),
+  makeDish({ id: 'pot-vermicelli-shrimp', name: '粉絲蝦米節瓜煲', displayName: '粉絲蝦米節瓜煲（配白飯）', category: 'one_pot_base', protein: 'shrimp', emoji: '🍲', hue: 95, cookingMethods: ['one_pot', 'braise'], flavourProfile: ['light', 'umami', 'homey'], timeMinutes: 25, oilLevel: 2, saltLevel: 2, babyWarnings: ['蝦'], allergens: ['蝦'], tags: ['清淡', '少洗鑊'], babyItems: [{ name: '軟飯', cautions: ['易咀嚼'] }, { name: '節瓜粉絲碎', instruction: '節瓜煮腍剪碎，粉絲剪短，蝦米可免。', cautions: ['已切碎'] }], ingredients: ing(['節瓜', '2個'], ['粉絲', '1紮'], ['蝦米', '1湯匙'], ['白飯', '3碗']) }),
+
+  // ============ 炒飯粉麵 (fried_dish) ============
+  makeDish({ id: 'frn-shrimp-egg-rice', name: '蝦仁蛋炒飯', category: 'fried_dish', protein: 'shrimp', emoji: '🍤', hue: 14, cookingMethods: ['stir_fry'], flavourProfile: ['savory'], timeMinutes: 12, oilLevel: 3, saltLevel: 3, babyWarnings: ['蝦', '蛋'], allergens: ['蝦', '蛋'], tags: ['快手'], babyItems: [{ name: '少油軟飯', instruction: '用白飯拌熟料，少油少鹽，唔好太乾。', cautions: ['少油', '少鹽'] }, { name: '蝦仁碎', instruction: '蝦仁去腸去殼切碎。', cautions: ['已切碎', '含蝦'] }, { name: '蛋碎菜粒', instruction: '蛋炒嫩切碎，青豆去衣壓碎。', cautions: ['已切碎', '含蛋'] }], ingredients: ing(['隔夜飯', '3碗'], ['蝦仁', '150g'], ['雞蛋', '3隻'], ['青豆粟米', '1碗'], ['蔥花', '2湯匙']) }),
+  makeDish({ id: 'frn-veg-egg-rice', name: '雞蛋菜粒炒飯', category: 'fried_dish', protein: 'egg', emoji: '🍳', hue: 45, cookingMethods: ['stir_fry'], flavourProfile: ['light', 'savory'], timeMinutes: 12, oilLevel: 2, saltLevel: 2, babyWarnings: ['蛋'], allergens: ['蛋'], tags: ['快手', '清雪櫃', '可可友善'], babyItems: [{ name: '少油軟飯', instruction: '白飯拌熟料，少油少鹽。', cautions: ['少油', '少鹽'] }, { name: '蛋碎菜粒', instruction: '蛋炒嫩、雜菜煮軟，一齊切碎。', cautions: ['已切碎', '含蛋'] }], ingredients: ing(['隔夜飯', '3碗'], ['雞蛋', '3隻'], ['雜菜粒', '1碗'], ['蔥花', '2湯匙']) }),
+  makeDish({ id: 'frn-soy-noodle', name: '豉油王炒麵', category: 'fried_dish', protein: 'none', emoji: '🍜', hue: 38, cookingMethods: ['stir_fry'], flavourProfile: ['savory'], timeMinutes: 12, oilLevel: 3, saltLevel: 3, sauceIntensity: 3, allergens: ['麩質'], tags: ['快手'], babyItems: [{ name: '剪短軟麵', instruction: '麵灼軟剪短，少油少豉油。', cautions: ['少油', '少鹽', '已切碎', '含麩質'] }, { name: '灼菜碎', instruction: '另灼菜心剪碎拌入。', cautions: ['已切碎'] }], ingredients: ing(['蛋麵', '3個'], ['芽菜', '1份'], ['韭黃', '1份'], ['老抽生抽糖', '適量'], ['蔥段', '少許']) }),
+  makeDish({ id: 'frn-singapore', name: '星洲炒米', category: 'fried_dish', protein: 'shrimp', emoji: '🍝', hue: 35, cookingMethods: ['stir_fry'], flavourProfile: ['curry', 'savory', 'spicy'], timeMinutes: 15, oilLevel: 3, saltLevel: 3, babyWarnings: ['辣', '蝦', '蛋'], allergens: ['蝦', '蛋'], tags: ['惹味'], babyItems: [{ name: '剪短軟米粉', instruction: '米粉灼軟剪短，免咖喱粉。', cautions: ['少油', '已切碎'] }, { name: '叉燒蝦碎', instruction: '叉燒蝦仁切碎去殼。', cautions: ['已切碎', '含蝦'] }], ingredients: ing(['米粉', '1包'], ['叉燒', '60g'], ['蝦仁', '60g'], ['雞蛋', '2隻'], ['咖喱粉', '1茶匙']) }),
+  makeDish({ id: 'frn-chicken-udon', name: '雞絲炒烏冬', category: 'fried_dish', protein: 'chicken', emoji: '🍲', hue: 48, cookingMethods: ['stir_fry'], flavourProfile: ['savory'], timeMinutes: 12, oilLevel: 2, saltLevel: 2, allergens: ['麩質'], tags: ['快手'], babyItems: [{ name: '剪短烏冬', instruction: '烏冬灼軟剪短，少油少鹽。', cautions: ['少油', '已切碎', '含麩質'] }, { name: '雞肉碎', instruction: '雞柳撕碎剁細。', cautions: ['已切碎', '已去骨'] }, { name: '椰菜碎', instruction: '椰菜煮軟剪碎。', cautions: ['已切碎'] }], ingredients: ing(['烏冬', '3個'], ['雞柳', '150g'], ['椰菜', '半個'], ['蔥花', '少許']) }),
+  makeDish({ id: 'frn-pork-noodle', name: '肉絲炒麵', category: 'fried_dish', protein: 'pork', emoji: '🍝', hue: 36, cookingMethods: ['stir_fry'], flavourProfile: ['savory'], timeMinutes: 14, oilLevel: 3, saltLevel: 3, allergens: ['麩質'], tags: [], babyItems: [{ name: '剪短軟麵', instruction: '麵灼軟剪短，少油少鹽。', cautions: ['少油', '已切碎', '含麩質'] }, { name: '肉絲碎', instruction: '肉絲剁碎。', cautions: ['已切碎'] }, { name: '菜絲碎', instruction: '菜絲煮軟剪碎。', cautions: ['已切碎'] }], ingredients: ing(['蛋麵', '3個'], ['豬肉絲', '150g'], ['菜絲', '1碗'], ['生抽', '1湯匙']) }),
+
+  // ============ 碟頭飯 (rice_bowl_base) ============
+  makeDish({ id: 'bowl-curry-chicken', name: '咖喱雞飯', category: 'rice_bowl_base', protein: 'chicken', emoji: '🍛', hue: 35, cookingMethods: ['braise', 'rice_cooker'], flavourProfile: ['curry', 'rich'], timeMinutes: 20, oilLevel: 3, saltLevel: 3, sauceIntensity: 4, babyWarnings: ['辣'], tags: ['惹味'], babyItems: [{ name: '軟飯', cautions: ['易咀嚼'] }, { name: '清雞肉碎', instruction: '咖喱另上，雞肉去骨切碎。', cautions: ['已去骨', '已切碎', '汁另上'] }, { name: '薯仔紅蘿蔔碎', instruction: '薯仔紅蘿蔔煮腍壓碎。', cautions: ['已切碎'] }], ingredients: ing(['白飯', '3碗'], ['雞扒', '2塊'], ['薯仔', '1個'], ['紅蘿蔔', '1條'], ['日式咖喱磚', '半盒'], ['西蘭花', '半個']) }),
+  makeDish({ id: 'bowl-tomato-beef', name: '番茄牛肉飯', category: 'rice_bowl_base', protein: 'beef', emoji: '🍅', hue: 6, cookingMethods: ['stir_fry'], flavourProfile: ['tomato', 'savory'], timeMinutes: 18, oilLevel: 2, saltLevel: 2, allergens: ['蛋'], tags: ['清雪櫃', '家常'], babyItems: [{ name: '軟飯', cautions: ['易咀嚼'] }, { name: '牛肉碎', instruction: '牛肉煮腍切碎，先分起。', cautions: ['已切碎', '先分起'] }, { name: '番茄碎', instruction: '番茄去皮煮腍切碎。', cautions: ['已切碎'] }], ingredients: ing(['白飯', '3碗'], ['牛肉', '200g'], ['番茄', '3個'], ['洋蔥', '半個'], ['雞蛋', '1隻'], ['灼菜心', '半斤']) }),
+  makeDish({ id: 'bowl-corn-fish', name: '粟米魚柳飯', category: 'rice_bowl_base', protein: 'fish', emoji: '🌽', hue: 50, cookingMethods: ['pan_fry'], flavourProfile: ['sweet_savory', 'light'], timeMinutes: 18, oilLevel: 3, saltLevel: 2, babyWarnings: ['魚骨'], allergens: ['魚'], tags: [], babyItems: [{ name: '軟飯', cautions: ['易咀嚼'] }, { name: '魚柳碎', instruction: '確認去骨，壓碎。', cautions: ['已去骨', '已切碎'] }, { name: '粟米蓉', instruction: '粟米去衣壓蓉。', cautions: ['已切碎'] }], ingredients: ing(['白飯', '3碗'], ['魚柳', '2件'], ['粟米', '1碗'], ['忌廉粟米汁', '半碗'], ['西蘭花', '半個']) }),
+  makeDish({ id: 'bowl-pork-patty', name: '蒸肉餅飯', category: 'rice_bowl_base', protein: 'pork', emoji: '🥩', hue: 18, cookingMethods: ['steam', 'rice_cooker'], flavourProfile: ['homey', 'savory'], timeMinutes: 20, oilLevel: 2, saltLevel: 3, tags: ['清雪櫃', '少洗鑊', '家常'], babyItems: [{ name: '軟飯', cautions: ['易咀嚼'] }, { name: '肉餅碎', instruction: '取中心肉壓散，少鹽。', cautions: ['已切碎', '少鹽'] }], ingredients: ing(['白飯', '3碗'], ['免治豬肉', '250g'], ['馬蹄', '3粒'], ['蔥', '1條']) }),
+  makeDish({ id: 'bowl-soy-chicken', name: '豉油雞飯', category: 'rice_bowl_base', protein: 'chicken', emoji: '🍗', hue: 30, cookingMethods: ['braise'], flavourProfile: ['sweet_savory', 'savory'], timeMinutes: 20, oilLevel: 2, saltLevel: 3, babyWarnings: ['雞骨'], tags: ['家常'], babyItems: [{ name: '軟飯', cautions: ['易咀嚼'] }, { name: '雞肉碎', instruction: '取未沾豉油部分，去骨切碎。', cautions: ['已去骨', '已切碎', '先分起'] }, { name: '灼菜碎', instruction: '灼菜剪碎。', cautions: ['已切碎'] }], ingredients: ing(['白飯', '3碗'], ['豉油雞', '半隻'], ['灼菜心', '半斤']) }),
+  makeDish({ id: 'bowl-shrimp-egg', name: '滑蛋蝦仁飯', category: 'rice_bowl_base', protein: 'shrimp', emoji: '🍤', hue: 14, cookingMethods: ['stir_fry'], flavourProfile: ['light', 'savory'], timeMinutes: 15, oilLevel: 2, saltLevel: 2, babyWarnings: ['蝦', '蛋'], allergens: ['蝦', '蛋'], tags: ['快手'], babyItems: [{ name: '軟飯', cautions: ['易咀嚼'] }, { name: '蝦仁碎', instruction: '蝦仁去腸去殼切碎。', cautions: ['已切碎', '含蝦'] }, { name: '蛋碎', instruction: '蛋炒嫩切碎。', cautions: ['已切碎', '含蛋'] }], ingredients: ing(['白飯', '3碗'], ['蝦仁', '150g'], ['雞蛋', '3隻'], ['蔥花', '少許'], ['灼時菜', '半斤']) }),
+
+  // ============ 湯粉麵粥 (soup_noodle_dish) ============
+  makeDish({ id: 'snc-tomato-beef-vermicelli', name: '番茄牛肉米線', category: 'soup_noodle_dish', protein: 'beef', emoji: '🍜', hue: 6, cookingMethods: ['soup', 'boil'], flavourProfile: ['tomato', 'light'], timeMinutes: 12, oilLevel: 2, saltLevel: 2, tags: ['快手', '清雪櫃', '有湯'], babyItems: [{ name: '剪短米線', instruction: '米線灼軟剪短，湯底未調味先分起。', cautions: ['已切碎', '先分起'] }, { name: '牛肉碎', instruction: '牛肉灼熟切碎。', cautions: ['已切碎'] }, { name: '番茄碎', instruction: '番茄去皮煮腍切碎。', cautions: ['已切碎'] }], ingredients: ing(['米線', '2個'], ['牛肉', '150g'], ['番茄', '3個'], ['生菜', '1棵']) }),
+  makeDish({ id: 'snc-chicken-macaroni', name: '雞絲通粉', category: 'soup_noodle_dish', protein: 'chicken', emoji: '🍝', hue: 46, cookingMethods: ['soup', 'boil'], flavourProfile: ['light'], timeMinutes: 12, oilLevel: 1, saltLevel: 2, allergens: ['麩質'], tags: ['快手', '清淡', '有湯'], babyItems: [{ name: '剪短通粉', instruction: '通粉煮軟剪短。', cautions: ['已切碎', '含麩質'] }, { name: '雞肉碎', instruction: '雞柳撕碎剁細。', cautions: ['已切碎', '已去骨'] }], ingredients: ing(['通粉', '2碗'], ['雞柳', '150g'], ['上湯', '1盒'], ['菜心', '半斤']) }),
+  makeDish({ id: 'snc-century-congee', name: '皮蛋瘦肉粥', category: 'soup_noodle_dish', protein: 'pork', emoji: '🥣', hue: 30, cookingMethods: ['boil'], flavourProfile: ['light', 'savory'], timeMinutes: 40, oilLevel: 1, saltLevel: 2, babyWarnings: ['皮蛋'], allergens: ['蛋'], tags: ['清淡', '有湯'], babyItems: [{ name: '軟粥', instruction: '粥煮軟身，免皮蛋。', cautions: ['易咀嚼', '少鹽'] }, { name: '瘦肉碎', instruction: '瘦肉煮腍剁碎拌入。', cautions: ['已切碎'] }], ingredients: ing(['米', '1杯'], ['瘦肉', '150g'], ['皮蛋', '1隻'], ['薑蔥', '少許']) }),
+  makeDish({ id: 'snc-fish-congee', name: '魚片粥', category: 'soup_noodle_dish', protein: 'fish', emoji: '🐟', hue: 200, cookingMethods: ['boil'], flavourProfile: ['light', 'umami'], timeMinutes: 40, oilLevel: 1, saltLevel: 2, babyWarnings: ['魚骨'], allergens: ['魚'], tags: ['清淡', '有湯'], babyItems: [{ name: '軟粥', instruction: '粥煮軟身。', cautions: ['易咀嚼', '少鹽'] }, { name: '魚片碎', instruction: '確認去骨，壓碎。', cautions: ['已去骨', '已切碎'] }], ingredients: ing(['米', '1杯'], ['魚片', '150g'], ['薑絲', '少許'], ['蔥花', '少許']) }),
+  makeDish({ id: 'snc-tofu-fish-rice', name: '豆腐魚湯飯', category: 'soup_noodle_dish', protein: 'fish', emoji: '🍲', hue: 198, cookingMethods: ['soup', 'boil'], flavourProfile: ['light', 'umami'], timeMinutes: 25, oilLevel: 2, saltLevel: 2, babyWarnings: ['魚骨'], allergens: ['魚', '黃豆'], tags: ['清淡', '有湯', '少洗鑊'], babyItems: [{ name: '軟湯飯', instruction: '白飯加湯焗軟。', cautions: ['易咀嚼', '少鹽'] }, { name: '魚肉碎', instruction: '徹底拆骨壓碎。', cautions: ['已去骨', '已切碎'] }, { name: '豆腐碎', instruction: '豆腐壓碎。', cautions: ['已切碎'] }], ingredients: ing(['白飯', '2碗'], ['魚', '半條'], ['豆腐', '1磚'], ['薑', '3片']) }),
+  makeDish({ id: 'snc-pork-seaweed-rice', name: '紫菜肉碎湯飯', category: 'soup_noodle_dish', protein: 'pork', emoji: '🍚', hue: 205, cookingMethods: ['soup', 'boil'], flavourProfile: ['light'], timeMinutes: 18, oilLevel: 1, saltLevel: 2, allergens: [], tags: ['快手', '清淡', '有湯', '少洗鑊'], babyItems: [{ name: '軟湯飯', instruction: '白飯加湯焗軟，先分起未調味。', cautions: ['易咀嚼', '少鹽', '先分起'] }, { name: '肉碎', instruction: '免治肉灼熟剁細。', cautions: ['已切碎'] }], ingredients: ing(['白飯', '2碗'], ['免治豬肉', '150g'], ['紫菜', '1片'], ['上湯', '1盒']) }),
+];
+
+export const dishById = Object.fromEntries(dishes.map((d) => [d.id, d]));

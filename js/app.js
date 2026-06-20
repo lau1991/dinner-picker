@@ -1,35 +1,28 @@
 // ============================================================
 // App shell: state + rendering + interactions.
+// All recommendation logic lives in engine.js; this file only drives the UI.
 //
-// Mode model:
-//   state.lockedType = null  -> 日常模式 (家常餸飯 active; 一按開餐 = weighted draw)
-//   state.lockedType = id    -> forced 轉個食法 (that chip active)
-// First load + tapping 家常餸飯 force a home_style_rice meal.
+// Mode: state.lockedType = null -> 日常 (家常餸飯 active; 一按開餐 = home)
+//       state.lockedType = id   -> forced variation. 驚喜抽 = weighted surprise.
+// Selecting a chip only sets state; results appear on 一按開餐 / 拉桿 / 驚喜抽.
 // ============================================================
 
 import {
-  householdProfile, mealTypes, mealTypeById, conditions, items,
+  householdProfile, mealTypes, conditions, dishes,
 } from './data.js';
 import { ageLabel } from './age.js';
-import {
-  buildMeal, rerollSlot, deriveBabyItems, babyTip, babySafetyChips,
-  adultSummary, mealReason, totalTime, columnsFor,
-  weightedPickMealType, uniformPickMealType, pickHomeStructure,
-} from './engine.js';
+import { recommend, weightedPickMealType, babyTip } from './engine.js';
+import { recordMeal } from './history.js';
 import { spinReels } from './slot.js';
 
 const HOME = 'home_style_rice';
 const VARIATIONS = mealTypes.filter((m) => m.id !== HOME);
 
-// ---------------- State ----------------
 const state = {
-  lockedType: null,       // null = 日常 weighted mode, else forced meal type id
-  mealTypeId: HOME,       // the meal type currently shown
-  structure: null,        // current home structure (when home)
-  conds: new Set(),       // active condition chips
-  meal: [],               // [{ item, role, label, slotIndex }]
-  locked: {},             // slotIndex -> { item, role }
-  lastAuto: false,        // last result came from a weighted (surprise) draw
+  lockedType: null,
+  conds: new Set(),
+  locked: {},          // slotIndex -> { dish, role }
+  result: null,
   spinning: false,
 };
 
@@ -41,18 +34,13 @@ const el = (tag, cls, html) => {
   if (html != null) n.innerHTML = html;
   return n;
 };
-const hueStyle = (it) => `--hue:${it.hue}`;
+const hueStyle = (d) => `--hue:${d.hue}`;
+const poolNames = (mealTypeId, role) =>
+  dishes.filter((d) => d.mealTypes.includes(mealTypeId) && d.slotRoles.includes(role)).map((d) => d.name);
 
-// Candidate names for a reel's spin animation.
-function poolNames(typeId, role) {
-  return items.filter((i) => i.mealTypes.includes(typeId) && i.roles.includes(role)).map((i) => i.name);
-}
-
-// ---------------- Chips: 今日主餐 / 轉個食法 / 條件 ----------------
+// ---------------- Chips ----------------
 function renderMealChips() {
-  const home = $('#chip-home');
-  home.classList.toggle('mealchip--on', state.lockedType === null);
-
+  $('#chip-home').classList.toggle('mealchip--on', state.lockedType === null);
   const wrap = $('#variation-meals');
   wrap.innerHTML = '';
   VARIATIONS.forEach((m) => {
@@ -76,69 +64,60 @@ function renderConditionChips() {
   });
 }
 
-function selectMealType(id) {
-  state.lockedType = id;       // force this variation
-  state.locked = {};
-  renderMealChips();
-  generate({ animate: true, force: id });
-}
-
-function backToHome() {
-  state.lockedType = null;     // 日常 mode, force a home meal now
-  state.locked = {};
-  renderMealChips();
-  generate({ animate: true, force: HOME });
-}
-
+// Selecting a chip only sets state — no result until a button is pressed.
+function selectMealType(id) { state.lockedType = id; state.locked = {}; renderMealChips(); }
+function backToHome() { state.lockedType = null; state.locked = {}; renderMealChips(); }
 function toggleCondition(id) {
-  if (state.conds.has(id)) state.conds.delete(id);
-  else state.conds.add(id);
+  if (state.conds.has(id)) state.conds.clear();
+  else { state.conds.clear(); state.conds.add(id); }
   renderConditionChips();
-  generate({ animate: true });
 }
 
-// ---------------- Slot reels ----------------
+// ---------------- Reels ----------------
 function renderReels() {
   const reels = $('#reels');
   reels.innerHTML = '';
-  state.meal.forEach((m) => {
+  state.result.adultItems.forEach((it) => {
     const reel = el('div', 'reel');
-    reel.style.cssText = hueStyle(m.item);
+    reel.style.cssText = hueStyle(it.dish);
     reel.innerHTML = `
-      <div class="reel__label">${m.label}</div>
-      <div class="reel__name">${m.item.name}</div>
-      <div class="reel__art">${m.item.emoji}</div>`;
+      <div class="reel__label">${it.label}</div>
+      <div class="reel__name">${it.dish.name}</div>
+      <div class="reel__art">${it.dish.emoji}</div>`;
     reels.appendChild(reel);
   });
-  reels.style.gridTemplateColumns = `repeat(${state.meal.length}, 1fr)`;
-  reels.classList.toggle('reels--dense', state.meal.length >= 5);
+  reels.style.gridTemplateColumns = `repeat(${state.result.adultItems.length}, 1fr)`;
+  reels.classList.toggle('reels--dense', state.result.adultItems.length >= 5);
 }
 
 // ---------------- Adult card ----------------
 function renderAdultCard() {
-  const type = mealTypeById[state.mealTypeId];
+  const r = state.result;
   $('#adult-people').textContent = `${householdProfile.adults.length}位成人`;
-  $('#adult-mealtype').innerHTML = `${type.emoji} ${type.displayName}`;
-  $('#adult-structure').textContent = `組合：${adultSummary(state.mealTypeId, state.meal, state.structure)}`;
-  $('#adult-reason').textContent = mealReason(state.mealTypeId, state.conds, state.lastAuto);
-  $('#adult-time').textContent = `約 ${totalTime(state.meal)} 分鐘`;
+  $('#adult-mealtype').innerHTML = `${r.mealTypeEmoji} ${r.mealTypeDisplayName}`;
+  $('#adult-structure').textContent = `組合：${r.structureLabel}`;
+  $('#adult-time').textContent = `約 ${r.timeEstimate} 分鐘`;
+
+  const reasons = $('#adult-reasons');
+  reasons.innerHTML = '';
+  r.reasons.forEach((txt) => reasons.appendChild(el('li', 'reasons__item', `<span>💡</span><span>${txt}</span>`)));
 
   const card = $('#adult-items');
   card.innerHTML = '';
-  state.meal.forEach((m) => {
-    const locked = isLocked(m.slotIndex, m.role);
+  r.adultItems.forEach((it) => {
+    const locked = isLocked(it.slotIndex, it.role);
     const cell = el('div', 'dish' + (locked ? ' dish--locked' : ''));
-    cell.style.cssText = hueStyle(m.item);
+    cell.style.cssText = hueStyle(it.dish);
     cell.innerHTML = `
-      <div class="dish__art">${m.item.emoji}</div>
-      <div class="dish__name">${m.item.name}</div>
+      <div class="dish__art">${it.dish.emoji}</div>
+      <div class="dish__name">${it.dish.name}</div>
       <div class="dish__meta">
-        <span class="tag tag--${m.item.kind}">${m.label}</span>
-        <span class="dish__time">🕒 ${m.item.cookingTime}分</span>
+        <span class="tag tag--${it.dish.kind}">${it.label}</span>
+        <span class="dish__time">🕒 ${it.dish.timeMinutes}分</span>
       </div>
       <div class="dish__actions">
-        <button class="iconbtn ${locked ? 'iconbtn--on' : ''}" data-lock="${m.slotIndex}">${locked ? '🔒 已鎖' : '🔓 鎖定'}</button>
-        <button class="iconbtn" data-swap="${m.slotIndex}">🔄 換走</button>
+        <button class="iconbtn ${locked ? 'iconbtn--on' : ''}" data-lock="${it.slotIndex}">${locked ? '🔒 已鎖' : '🔓 鎖定'}</button>
+        <button class="iconbtn" data-swap="${it.slotIndex}">🔄 換走</button>
       </div>`;
     card.appendChild(cell);
   });
@@ -146,6 +125,7 @@ function renderAdultCard() {
   card.querySelectorAll('[data-swap]').forEach((b) => b.addEventListener('click', () => swapSlot(+b.dataset.swap)));
 }
 
+// adultItems carry slotIndex (assigned in generate); locks key on it.
 function isLocked(slotIndex, role) {
   const l = state.locked[slotIndex];
   return !!l && l.role === role;
@@ -153,51 +133,48 @@ function isLocked(slotIndex, role) {
 
 // ---------------- Baby card ----------------
 function renderBabyCard() {
+  const r = state.result;
   $('#baby-age').textContent = ageLabel(householdProfile.child.birthday);
   $('#baby-name').textContent = householdProfile.child.name;
-  const type = mealTypeById[state.mealTypeId];
-  $('#baby-mode').textContent = `今晚跟「${type.displayName}」同源改造`;
+  $('#baby-mode').textContent = `今晚跟「${r.mealTypeDisplayName}」同源改造`;
 
-  const babyItems = deriveBabyItems(state.mealTypeId, state.meal);
   const wrap = $('#baby-items');
   wrap.innerHTML = '';
-  if (!babyItems.length) {
-    wrap.appendChild(el('p', 'baby-empty', '今晚的餸未必適合可可，揀「可可友善」或轉個食法試試 🙂'));
-  }
-  babyItems.forEach((b) => {
+  r.babyItems.forEach((b) => {
     const cell = el('div', 'bdish');
     cell.style.cssText = `--hue:${b.hue}`;
     cell.innerHTML = `
       <div class="bdish__art">${b.emoji}</div>
       <div class="bdish__name">${b.name}</div>
-      <div class="bdish__from">源自 ${b.fromName}</div>`;
+      <div class="bdish__from">源自 ${b.derivedFrom}</div>
+      ${b.instruction ? `<div class="bdish__how">${b.instruction}</div>` : ''}`;
     wrap.appendChild(cell);
   });
 
+  const safety = new Set();
+  r.babyItems.forEach((b) => b.safetyTags.forEach((t) => safety.add(t)));
   const chips = $('#baby-safety');
   chips.innerHTML = '';
-  babySafetyChips(state.mealTypeId, babyItems).forEach((c) => chips.appendChild(el('span', 'safety', c)));
+  [...safety].forEach((c) => chips.appendChild(el('span', 'safety', c)));
 
-  $('#baby-tip').textContent = `餵食貼士：${babyTip(state.mealTypeId)}`;
+  $('#baby-tip').textContent = `餵食貼士：${babyTip(r.mealType)}`;
 }
 
-// ---------------- Ingredient / shopping list ----------------
+// ---------------- Ingredient list ----------------
 function renderIngredientsCard() {
   const wrap = $('#ingredient-list');
   wrap.innerHTML = '';
-  state.meal.forEach((m) => {
-    const rows = (m.item.ingredients && m.item.ingredients.length
-      ? m.item.ingredients
-      : [{ n: m.item.name, q: '適量' }])
-      .map((ing) => `<li class="irow"><span class="irow__n">${ing.n}</span><span class="irow__q">${ing.q}</span></li>`)
+  state.result.adultItems.forEach((it) => {
+    const rows = (it.dish.ingredients.length ? it.dish.ingredients : [{ n: it.dish.name, q: '適量' }])
+      .map((g) => `<li class="irow"><span class="irow__n">${g.n}</span><span class="irow__q">${g.q}</span></li>`)
       .join('');
     const block = el('div', 'iblock');
-    block.style.cssText = hueStyle(m.item);
+    block.style.cssText = hueStyle(it.dish);
     block.innerHTML = `
       <div class="iblock__head">
-        <span class="iblock__emoji">${m.item.emoji}</span>
-        <span class="iblock__name">${m.item.name}</span>
-        <span class="tag tag--${m.item.kind}">${m.label}</span>
+        <span class="iblock__emoji">${it.dish.emoji}</span>
+        <span class="iblock__name">${it.dish.name}</span>
+        <span class="tag tag--${it.dish.kind}">${it.label}</span>
       </div>
       <ul class="irows">${rows}</ul>`;
     wrap.appendChild(block);
@@ -205,21 +182,11 @@ function renderIngredientsCard() {
 }
 
 // ---------------- Generation ----------------
-function chooseType({ force, uniform }) {
-  if (force) return force;
-  if (uniform) return uniformPickMealType();
-  if (state.lockedType) return state.lockedType;
-  return weightedPickMealType(state.conds);
-}
-
-function generate({ animate, force, uniform }) {
-  if (state.spinning) return;
-
-  const typeId = chooseType({ force, uniform });
-  state.lastAuto = !force && !state.lockedType;   // came from a weighted/surprise draw
-  state.mealTypeId = typeId;
-  state.structure = typeId === HOME ? pickHomeStructure() : null;
-  state.meal = buildMeal(typeId, state.structure, state.conds, state.locked);
+function applyResult(result, { animate }) {
+  // tag each adult item with its slot index for lock/swap bookkeeping
+  result.adultItems.forEach((it, i) => { it.slotIndex = i; });
+  state.result = result;
+  recordMeal(result.adultItems.map((it) => it.dish.id));
 
   renderReels();
   renderAdultCard();
@@ -227,43 +194,68 @@ function generate({ animate, force, uniform }) {
   renderIngredientsCard();
 
   if (!animate) return;
-
   state.spinning = true;
-  const reelEls = [...$('#reels').querySelectorAll('.reel')].map((r, i) => ({
-    el: r.querySelector('.reel__name'),
-    pool: poolNames(typeId, state.meal[i].role),
+  const reelEls = [...$('#reels').querySelectorAll('.reel')].map((reel, i) => ({
+    el: reel.querySelector('.reel__name'),
+    pool: poolNames(result.mealType, result.adultItems[i].role),
   }));
-  spinReels(reelEls, state.meal.map((m) => m.item.name)).then(() => { state.spinning = false; });
+  spinReels(reelEls, result.adultItems.map((it) => it.dish.name)).then(() => { state.spinning = false; });
+}
+
+function generate({ force, animate, auto }) {
+  if (state.spinning) return;
+  const mealTypeId = force ?? state.lockedType ?? HOME;
+  // Keep the current structure when locks are in play so locked slots stay valid.
+  const keepStructure = Object.keys(state.locked).length && state.result && state.result.mealType === mealTypeId
+    ? state.result.structureKey : null;
+  const result = recommend({ mealTypeId, conds: state.conds, locked: state.locked, structureKey: keepStructure });
+  state.lastAuto = !!auto;
+  result.reasons = auto && mealTypeId !== HOME
+    ? ['日常隨機抽中：' + result.reasons[0], ...result.reasons.slice(1)] : result.reasons;
+  applyResult(result, { animate });
 }
 
 function surprise() {
-  state.lockedType = null;        // surprise returns to 日常 mode
+  const t = weightedPickMealType(state.conds);
+  state.lockedType = t === HOME ? null : t;
   state.locked = {};
   renderMealChips();
-  generate({ animate: true, uniform: true });
+  generate({ force: t, animate: true, auto: true });
 }
 
 // ---------------- Lock / swap ----------------
 function toggleLock(slotIndex) {
-  const m = state.meal.find((x) => x.slotIndex === slotIndex);
-  if (isLocked(slotIndex, m.role)) delete state.locked[slotIndex];
-  else state.locked[slotIndex] = { item: m.item, role: m.role };
+  const it = state.result.adultItems.find((x) => x.slotIndex === slotIndex);
+  if (isLocked(slotIndex, it.role)) delete state.locked[slotIndex];
+  else state.locked[slotIndex] = { dish: it.dish, role: it.role };
   renderAdultCard();
 }
 
 function swapSlot(slotIndex) {
   if (state.spinning) return;
-  delete state.locked[slotIndex];     // swap overrides a lock on that slot
-  state.meal = rerollSlot(state.mealTypeId, state.meal, slotIndex, state.conds);
+  const r = state.result;
+  const cur = r.adultItems.find((x) => x.slotIndex === slotIndex);
+  // Lock every other slot, free only this one, exclude the current dish.
+  const lockOthers = {};
+  r.adultItems.forEach((it) => { if (it.slotIndex !== slotIndex) lockOthers[it.slotIndex] = { dish: it.dish, role: it.role }; });
+  delete state.locked[slotIndex];
+
+  const result = recommend({
+    mealTypeId: r.mealType, conds: state.conds, locked: lockOthers,
+    structureKey: r.structureKey, excludeId: cur.dish.id,
+  });
+  // preserve user's existing locks (minus the swapped slot)
+  result.adultItems.forEach((it, i) => { it.slotIndex = i; });
+  state.result = result;
+  recordMeal(result.adultItems.map((it) => it.dish.id));
 
   state.spinning = true;
   renderReels();
-  const m = state.meal[slotIndex];
   const reelEl = {
     el: $('#reels').children[slotIndex].querySelector('.reel__name'),
-    pool: poolNames(state.mealTypeId, m.role),
+    pool: poolNames(result.mealType, result.adultItems[slotIndex].role),
   };
-  spinReels([reelEl], [m.item.name]).then(() => { state.spinning = false; });
+  spinReels([reelEl], [result.adultItems[slotIndex].dish.name]).then(() => { state.spinning = false; });
   renderAdultCard();
   renderBabyCard();
   renderIngredientsCard();
@@ -284,14 +276,11 @@ function init() {
   renderMealChips();
   renderConditionChips();
   wireNav();
-
   $('#chip-home').addEventListener('click', backToHome);
   $('#btn-serve').addEventListener('click', () => generate({ animate: true }));
   $('#lever').addEventListener('click', () => generate({ animate: true }));
   $('#btn-random').addEventListener('click', surprise);
-
-  // First load: a home_style_rice meal, no spin.
-  generate({ animate: false, force: HOME });
+  generate({ force: HOME, animate: false });  // first load: a home meal, no spin
 }
 
 document.addEventListener('DOMContentLoaded', init);
