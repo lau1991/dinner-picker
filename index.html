@@ -14,6 +14,22 @@
   <div class="phone">
     <!-- A. Header -->
     <header class="header">
+      <span class="header__logo" aria-hidden="true">
+        <svg viewBox="0 0 44 44" width="40" height="40" role="img">
+          <defs>
+            <linearGradient id="logoBg" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#fff7e6" /><stop offset="1" stop-color="#f4e6c4" />
+            </linearGradient>
+          </defs>
+          <circle cx="22" cy="22" r="21" fill="url(#logoBg)" stroke="#d4a64a" stroke-width="2" />
+          <g fill="none" stroke="#2f6b3d" stroke-width="2" stroke-linecap="round" opacity=".75">
+            <path d="M17 14 q-2.5 -2.5 0 -5" /><path d="M22 13 q-2.5 -2.5 0 -5" /><path d="M27 14 q-2.5 -2.5 0 -5" />
+          </g>
+          <path d="M13.5 21 a8.5 6 0 0 1 17 0 z" fill="#fffdf6" stroke="#d4a64a" stroke-width="1.2" />
+          <path d="M10 22 h24 a12 12 0 0 1 -24 0 z" fill="#2f6b3d" />
+          <path d="M10 22 h24" stroke="#d4a64a" stroke-width="2.2" stroke-linecap="round" />
+        </svg>
+      </span>
       <h1 class="header__title">今晚食乜餸啊？</h1>
       <button class="header__fav" aria-label="我的最愛"><span>❤</span> 我的最愛</button>
     </header>
@@ -60,7 +76,7 @@
         <div class="card__head">
           <div class="card__avatar card__avatar--adult">👨‍👩‍👧</div>
           <div class="card__titles">
-            <h2 class="card__title">外母 + 我哋兩公婆</h2>
+            <h2 class="card__title">大人餐</h2>
             <p class="card__sub">份量：<span id="adult-people">3位成人</span>　|　餐型：<span class="mealtype-pill" id="adult-mealtype">—</span></p>
             <p class="card__sub" id="adult-structure">組合：—</p>
           </div>

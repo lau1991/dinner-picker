@@ -52,6 +52,13 @@ html, body {
   min-height: 56px;
   padding: 18px 12px 8px;
 }
+.header__logo {
+  flex: 0 0 auto;
+  width: 40px; height: 40px;
+  display: grid; place-items: center;
+  filter: drop-shadow(0 2px 3px rgba(74, 60, 30, .18));
+}
+.header__logo svg { display: block; }
 .header__title {
   flex: 1;
   margin: 0;
