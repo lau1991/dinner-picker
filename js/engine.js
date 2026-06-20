@@ -1,124 +1,170 @@
 // ============================================================
 // Recommendation engine — pure functions over the mock data.
-// No DOM here, so this is the part you'd later swap for a backend call.
+// Swap these for a backend later; the result shape stays the same.
 // ============================================================
 
-import { dishesByCategory, structures, categoryMeta } from './data.js';
+import {
+  items, mealTypes, mealTypeById, homeStyleStructures, lowEffortTypes,
+} from './data.js';
 
-// Weighted random pick: dishes matching active filters get a boost.
-function pickWeighted(candidates, activeFilters) {
-  const weighted = candidates.map((d) => {
-    let w = 1;
-    if (activeFilters.has('light') && d.tags.includes('light')) w += 3;
-    if (activeFilters.has('quick') && (d.tags.includes('quick') || d.cookingTime <= 15)) w += 3;
-    if (activeFilters.has('fridge') && d.tags.includes('fridge')) w += 3;
-    if (activeFilters.has('baby') && d.babyAdaptable) w += 3;
-    return { d, w };
-  });
-  const total = weighted.reduce((s, x) => s + x.w, 0);
+const HOME = 'home_style_rice';
+
+// --- Generic weighted pick ---------------------------------------------
+function pickByWeight(list, weightOf) {
+  const arr = list.map((x) => ({ x, w: Math.max(0.001, weightOf(x)) }));
+  const total = arr.reduce((s, a) => s + a.w, 0);
   let r = Math.random() * total;
-  for (const { d, w } of weighted) {
-    r -= w;
-    if (r <= 0) return d;
+  for (const a of arr) { r -= a.w; if (r <= 0) return a.x; }
+  return arr[arr.length - 1].x;
+}
+
+// --- Meal-type selection -----------------------------------------------
+/** Weighted draw across meal types. 少洗鑊/15分鐘 boost the low-effort types. */
+export function weightedPickMealType(conds) {
+  const boost = conds.has('low_wash') || conds.has('quick');
+  return pickByWeight(mealTypes, (m) => {
+    let w = m.defaultWeight;
+    if (boost && lowEffortTypes.includes(m.id)) w *= 2.2;
+    return w;
+  }).id;
+}
+
+/** Uniform "surprise me" — any meal type, equal odds. */
+export function uniformPickMealType() {
+  return mealTypes[Math.floor(Math.random() * mealTypes.length)].id;
+}
+
+export function pickHomeStructure() {
+  return pickByWeight(homeStyleStructures, (s) => s.weight);
+}
+
+// --- Columns for a meal type -------------------------------------------
+/** Returns [{ role, label }] for the reels. Home style uses its structure. */
+export function columnsFor(typeId, structure) {
+  if (typeId === HOME) return structure.slots.map((s) => ({ role: s.role, label: s.label }));
+  return mealTypeById[typeId].columns.map((c) => ({ ...c }));
+}
+
+// --- Item pool for a (mealType, role) ----------------------------------
+function poolFor(typeId, role) {
+  // Home style maps 主餸/配餸 onto the shared "main" dishes by role membership.
+  return items.filter((i) => i.mealTypes.includes(typeId) && i.roles.includes(role));
+}
+
+function pickItem(typeId, role, conds, usedIds) {
+  let pool = poolFor(typeId, role).filter((i) => !usedIds.has(i.id));
+  if (!pool.length) pool = poolFor(typeId, role);
+
+  // Hard conditions (with fallback so the meal is never left incomplete).
+  if (conds.has('baby')) {
+    const b = pool.filter((i) => i.babyAdaptable);
+    if (b.length) pool = b;
   }
-  return weighted[weighted.length - 1].d;
-}
-
-// Pick one dish for a category, avoiding ids already chosen for the same meal.
-function pickForCategory(category, activeFilters, usedIds) {
-  const pool = (dishesByCategory[category] || []).filter((d) => !usedIds.has(d.id));
-  const candidates = pool.length ? pool : dishesByCategory[category] || [];
-  return pickWeighted(candidates, activeFilters);
-}
-
-/** Compute the reel label for a slot, disambiguating 主菜1 / 主菜2 when needed. */
-export function slotLabel(slots, index) {
-  const cat = slots[index];
-  const base = categoryMeta[cat].tag;
-  const sameCat = slots.filter((c) => c === cat);
-  if (sameCat.length > 1) {
-    const ordinal = slots.slice(0, index + 1).filter((c) => c === cat).length;
-    return `${base}${ordinal}`;
+  if (conds.has('quick')) {
+    const q = pool.filter((i) => i.cookingTime <= 15);
+    if (q.length) pool = q;
   }
-  return base;
-}
-
-/** Build a full meal for a structure. `locked` maps slot index -> dish (kept as-is). */
-export function buildMeal(structure, activeFilters, locked = {}) {
-  const usedIds = new Set(Object.values(locked).map((d) => d.id));
-  const items = structure.slots.map((cat, i) => {
-    if (locked[i]) return locked[i];
-    const dish = pickForCategory(cat, activeFilters, usedIds);
-    usedIds.add(dish.id);
-    return dish;
+  // Soft conditions nudge the odds.
+  return pickByWeight(pool, (i) => {
+    let w = 1;
+    if (conds.has('light') && i.tags.includes('light')) w += 3;
+    if (conds.has('fridge') && i.tags.includes('fridge')) w += 3;
+    return w;
   });
-  return items.map((dish, i) => ({
-    dish,
-    slotIndex: i,
-    category: structure.slots[i],
-    label: slotLabel(structure.slots, i),
-  }));
 }
 
-/** Reroll a single slot only, keeping every other item. */
-export function rerollSlot(meal, structure, slotIndex, activeFilters) {
-  const cat = structure.slots[slotIndex];
-  const usedIds = new Set(meal.filter((it, i) => i !== slotIndex).map((it) => it.dish.id));
-  const dish = pickForCategory(cat, activeFilters, usedIds);
-  return meal.map((it) => (it.slotIndex === slotIndex ? { ...it, dish } : it));
+// --- Build a full meal -------------------------------------------------
+// locked: map slotIndex -> { item, role } kept across re-rolls when the
+// column at that index still has the same role.
+export function buildMeal(typeId, structure, conds, locked = {}) {
+  const cols = columnsFor(typeId, structure);
+  const usedIds = new Set();
+  Object.entries(locked).forEach(([i, l]) => {
+    if (cols[i] && cols[i].role === l.role) usedIds.add(l.item.id);
+  });
+
+  return cols.map((c, i) => {
+    const keep = locked[i] && cols[i].role === locked[i].role;
+    if (keep) return { item: locked[i].item, role: c.role, label: c.label, slotIndex: i };
+    const item = pickItem(typeId, c.role, conds, usedIds);
+    usedIds.add(item.id);
+    return { item, role: c.role, label: c.label, slotIndex: i };
+  });
 }
 
-// --- Baby meal: adapted from the adult meal, not chosen independently. ---
-export function deriveBabyItems(meal) {
-  return meal
-    .filter((it) => it.dish.babyAdaptable)
-    .map((it) => ({
-      name: it.dish.babyVersionName,
-      fromName: it.dish.name,
-      instruction: it.dish.babyInstruction,
-      cautions: it.dish.babyCautions,
-      emoji: it.dish.emoji,
-      hue: it.dish.hue,
-    }));
+/** Reroll a single column only. Excludes the current item so it actually changes. */
+export function rerollSlot(typeId, meal, slotIndex, conds) {
+  const used = new Set(meal.map((m) => m.item.id)); // includes current -> forces a change
+  const role = meal[slotIndex].role;
+  const item = pickItem(typeId, role, conds, used);
+  return meal.map((m) => (m.slotIndex === slotIndex ? { ...m, item } : m));
 }
 
-// Aggregate every safety chip across the baby items (deduped).
-export function babySafetyChips(babyItems) {
-  const set = new Set();
-  babyItems.forEach((b) => b.cautions.forEach((c) => set.add(c)));
-  set.add('可可友善');
+// --- Summaries ---------------------------------------------------------
+function find(meal, role) { const m = meal.find((x) => x.role === role); return m ? m.item : null; }
+const nm = (it) => (it ? it.name : '');
+const sh = (it) => (it ? (it.short ?? it.name) : '');
+
+/** The "組合" line: structure label for home, a dish-like combo otherwise. */
+export function adultSummary(typeId, meal, structure) {
+  switch (typeId) {
+    case 'one_pot':
+      return `${nm(find(meal, 'pot_type'))} + ${nm(find(meal, 'pot_staple'))}`;
+    case 'fried_rice_noodles': {
+      const extra = find(meal, 'frn_extra');
+      const head = `${sh(find(meal, 'frn_protein'))}${nm(find(meal, 'frn_base'))}`;
+      return extra ? `${head} + ${nm(extra)}` : head;
+    }
+    case 'rice_bowl':
+      return `${sh(find(meal, 'bowl_sauce'))}${sh(find(meal, 'bowl_protein'))}飯 + ${nm(find(meal, 'bowl_side'))}`;
+    case 'soup_noodle_congee':
+      return `${sh(find(meal, 'snc_broth'))}${sh(find(meal, 'snc_protein'))}${sh(find(meal, 'snc_base'))} + 菜`;
+    default:
+      return structure ? structure.label : '';
+  }
+}
+
+// --- Baby meal: same-source adaptation ---------------------------------
+export function deriveBabyItems(typeId, meal) {
+  const rule = mealTypeById[typeId].babyRule;
+  const out = (rule.extra || []).map((e) => ({ ...e }));
+  meal.forEach((m) => {
+    if (m.item.babyAdaptable) {
+      out.push({
+        name: m.item.babyVersionName,
+        fromName: m.item.name,
+        instruction: m.item.babyInstruction,
+        emoji: m.item.emoji,
+        hue: m.item.hue,
+        cautions: m.item.babyCautions || [],
+      });
+    }
+  });
+  return out;
+}
+
+export function babyTip(typeId) { return mealTypeById[typeId].babyRule.tip; }
+
+export function babySafetyChips(typeId, babyItems) {
+  const set = new Set(mealTypeById[typeId].babyRule.safety);
+  babyItems.forEach((b) => (b.cautions || []).forEach((c) => set.add(c)));
   return [...set];
 }
 
-// --- Cooking-order tip, generated from what's actually on the menu. ---
-export function cookingTip(meal) {
-  const steps = [];
-  const has = (cat) => meal.some((it) => it.category === cat);
-  if (has('soup')) steps.push('先煲湯');
-  if (meal.some((it) => it.category === 'main' && it.dish.name.includes('蒸'))) steps.push('再蒸餸');
-  else if (has('main')) steps.push('再煮主菜');
-  if (has('vegetable')) steps.push('最後炒菜');
-  if (steps.length < 2) return '備好材料，由耐煮到快熟逐樣上，時間更順手！';
-  return `${steps.join('，')}，時間更順手！`;
-}
-
-// --- Reason line, built from structure + active filters. ---
-export function mealReason(structure, activeFilters) {
-  const bits = [];
-  if (activeFilters.has('light')) bits.push('清淡');
-  if (activeFilters.has('quick')) bits.push('快手');
-  if (activeFilters.has('fridge')) bits.push('用埋雪櫃食材');
-  if (activeFilters.has('baby')) bits.push('可可友善');
-  if (!bits.length) bits.push('營養均衡', '一家四口啱食');
-  return bits.join('、');
+// --- Reason + time -----------------------------------------------------
+export function mealReason(typeId, conds, auto) {
+  const bits = [mealTypeById[typeId].displayName];
+  if (conds.has('light')) bits.push('清淡少油');
+  if (conds.has('quick')) bits.push('15分鐘');
+  if (conds.has('fridge')) bits.push('用埋雪櫃');
+  if (conds.has('low_wash')) bits.push('少洗鑊');
+  if (conds.has('baby')) bits.push('可可友善');
+  if (bits.length === 1) bits.push('一家四口啱食');
+  const base = bits.join(' · ');
+  return auto && typeId !== HOME ? `${base}（日常隨機抽中）` : base;
 }
 
 export function totalTime(meal) {
-  // Dishes mostly cook in parallel — estimate by the slowest plus a little prep.
-  const max = Math.max(...meal.map((it) => it.dish.cookingTime));
+  const max = Math.max(...meal.map((m) => m.item.cookingTime));
   return max + 10;
-}
-
-export function findStructure(id) {
-  return structures.find((s) => s.id === id) || structures[0];
 }

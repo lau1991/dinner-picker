@@ -18,7 +18,26 @@
       <button class="header__fav" aria-label="我的最愛"><span>❤</span> 我的最愛</button>
     </header>
 
-    <nav id="filters" class="filters" aria-label="篩選"></nav>
+    <section class="chipsets" aria-label="餐型同條件">
+      <div class="chipset chipset--main">
+        <span class="chipset__title">今日主餐</span>
+        <button id="chip-home" class="mealchip mealchip--hero mealchip--on" type="button">
+          <span class="mealchip__emoji">🍚</span>
+          <span class="mealchip__text">
+            <span class="mealchip__label">家常餸飯</span>
+            <span class="mealchip__hint">日常晚餐主流程</span>
+          </span>
+        </button>
+      </div>
+      <div class="chipset">
+        <span class="chipset__title">轉個食法</span>
+        <div id="variation-meals" class="chipset__row"></div>
+      </div>
+      <div class="chipset">
+        <span class="chipset__title">條件</span>
+        <div id="conditions" class="chipset__row"></div>
+      </div>
+    </section>
 
     <main class="content">
       <!-- B. Slot machine -->
@@ -31,11 +50,9 @@
         </div>
 
         <div class="slot__controls">
-          <button id="btn-random" class="btn btn--ghost">🎲 隨機組合</button>
+          <button id="btn-random" class="btn btn--ghost">🎲 驚喜抽</button>
           <button id="btn-serve" class="btn btn--primary">一按開餐</button>
         </div>
-
-        <div id="structure-picker" class="structures" aria-label="餐單組合"></div>
       </section>
 
       <!-- C. Adult card -->
@@ -44,7 +61,8 @@
           <div class="card__avatar card__avatar--adult">👨‍👩‍👧</div>
           <div class="card__titles">
             <h2 class="card__title">外母 + 我哋兩公婆</h2>
-            <p class="card__sub">份量：<span id="adult-people">3位成人</span>　|　<span id="adult-structure">組合：—</span></p>
+            <p class="card__sub">份量：<span id="adult-people">3位成人</span>　|　餐型：<span class="mealtype-pill" id="adult-mealtype">—</span></p>
+            <p class="card__sub" id="adult-structure">組合：—</p>
           </div>
           <span class="badge badge--adult">⭐ 今日推薦</span>
         </div>
@@ -55,7 +73,6 @@
           <span class="reason__why" id="adult-reason">—</span>
           <span class="reason__time" id="adult-time">—</span>
         </div>
-        <div class="tipbar"><span class="tipbar__icon">💡</span><span id="adult-tip">—</span></div>
       </section>
 
       <!-- D. Baby card -->
@@ -65,7 +82,7 @@
           <div class="card__titles">
             <h2 class="card__title"><span id="baby-name">可可</span>
               <span class="age-pill"><span id="baby-age">—</span></span></h2>
-            <p class="card__sub">份量：1位幼兒　|　餐式：軟飯＋細碎餸（少鹽少油）</p>
+            <p class="card__sub">份量：1位幼兒　|　<span id="baby-mode">同源改造</span></p>
           </div>
           <span class="badge badge--baby">🍼 寶寶餐</span>
         </div>
@@ -78,7 +95,7 @@
 
         <div class="tipbar tipbar--baby">
           <span class="tipbar__icon">🥄</span>
-          <span>餵食貼士：先分起可可份，再調味。魚肉拆骨，菜剪碎，少鹽少油。</span>
+          <span id="baby-tip">餵食貼士：—</span>
         </div>
       </section>
 
